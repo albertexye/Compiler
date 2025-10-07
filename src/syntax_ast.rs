@@ -26,6 +26,7 @@ pub(crate) enum TypeDefBody {
     Struct(HashMap<String, TypeAnnot>),
     Enum(HashMap<String, u64>),
     Union(HashMap<String, TypeAnnot>),
+    Alias(TypeAnnot),
 }
 
 pub(crate) enum Statement {

@@ -1,18 +1,24 @@
 use std::collections::HashMap;
 use std::rc::Rc;
 
-pub(crate) struct File {
+pub(crate) struct Module {
     pub(crate) name: String,
-    pub(crate) module: String,
-    pub(crate) imports: Vec<String>,
-    pub(crate) globals: Vec<Scope<Declaration>>,
-    pub(crate) functions: Vec<Scope<Function>>,
-    pub(crate) types: Vec<Scope<TypeDef>>,
+    pub(crate) files: Vec<File>,
 }
 
-pub(crate) struct Scope<T> {
-    pub(crate) public: bool,
-    pub(crate) value: T,
+pub(crate) struct File {
+    pub(crate) name: String,
+    pub(crate) imports: Vec<Rc<Module>>,
+    pub(crate) globals: Vec<Declaration>,
+    pub(crate) functions: Vec<Function>,
+    pub(crate) types: Vec<TypeDef>,
+    pub(crate) exported: Vec<Symbol>,
+}
+
+pub(crate) enum Symbol {
+    Type(Rc<TypeDef>),
+    Function(Rc<Function>),
+    Declaration(Rc<Declaration>),
 }
 
 pub(crate) struct TypeDef {
@@ -24,6 +30,7 @@ pub(crate) enum TypeDefBody {
     Struct(HashMap<String, TypeAnnot>),
     Enum(HashMap<String, u64>),
     Union(HashMap<String, TypeAnnot>),
+    Alias(TypeAnnot),
 }
 
 pub(crate) enum Statement {
@@ -83,7 +90,7 @@ pub(crate) enum ExpressionValue {
     Unary(Unary),
     Call(Call),
     Literal(Literal),
-    Identifier(String),
+    Symbol(Symbol),
 }
 
 pub(crate) struct Binary {
@@ -112,7 +119,6 @@ pub(crate) enum BinaryOp {
     LogicalAnd,
     LogicalOr,
     Indexing,
-    NameAccess,
     FieldAccess,
 }
 

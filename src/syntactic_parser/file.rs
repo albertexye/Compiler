@@ -15,7 +15,7 @@ impl SyntacticParser {
                 return Err(self.error(&ErrorType::Module, "Expected keyword"));
             };
             match kw {
-                TokenType::Struct | TokenType::Enum | TokenType::Union => {
+                TokenType::Struct | TokenType::Enum | TokenType::Union | TokenType::Use => {
                     types.push(Scope {
                         public,
                         value: self.parse_type_definition()?,

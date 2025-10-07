@@ -64,6 +64,7 @@ pub(crate) enum TokenType {
     Prv,
     Module,
     Import,
+    Use,
 }
 
 #[derive(Debug, PartialEq, Clone)]

@@ -3,15 +3,15 @@ use super::*;
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
-const TOKEN_TYPES_STR: [&str; 62] = [
+const TOKEN_TYPES_STR: [&str; 63] = [
     ",", ";", ":", "::", ".", "(", ")", "[", "]", "{", "}", "+", "+=", "-", "-=", "*", "*=", "/",
     "/=", "%", "%=", "<<", "<<=", ">>", ">>=", "&", "&=", "|", "|=", "^", "^=", "~", "and", "or",
     "!", "==", "!=", ">", ">=", "<", "<=", "=", "->", "=>", "if", "else", "match", "while", "for",
     "break", "continue", "return", "fn", "let", "var", "struct", "enum", "union", "pub", "prv",
-    "module", "import",
+    "module", "import", "use",
 ];
 
-const TOKEN_TYPES_ENUM: [TokenType; 62] = [
+const TOKEN_TYPES_ENUM: [TokenType; 63] = [
     TokenType::Comma,
     TokenType::Semicolon,
     TokenType::Colon,
@@ -74,6 +74,7 @@ const TOKEN_TYPES_ENUM: [TokenType; 62] = [
     TokenType::Prv,
     TokenType::Module,
     TokenType::Import,
+    TokenType::Use,
 ];
 
 const _: () = std::assert!(

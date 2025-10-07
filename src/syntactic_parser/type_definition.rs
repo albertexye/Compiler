@@ -1,3 +1,40 @@
+/*!
+This crate parses all kinds of type definitions.
+- Struct
+- Union
+- Enum
+- Alias
+
+Structs are of the following format:
+```
+struct Point {
+    x: u64,
+    y: u64,
+}
+```
+
+Unions are of the following format:
+```
+union Person {
+    teacher: Teacher,
+    student: Student,
+}
+```
+
+Enums are of the following format:
+```
+enum PersonType {
+    Teacher,
+    Student = 10,
+}
+```
+
+Aliases are of the following format:
+```
+use Names = []var []var u8;
+```
+*/
+
 use std::collections::{HashMap, HashSet};
 
 use super::*;
@@ -13,6 +50,7 @@ impl SyntacticParser {
             TokenType::Struct => self.parse_struct(),
             TokenType::Enum => self.parse_enum(),
             TokenType::Union => self.parse_union(),
+            TokenType::Use => self.parse_alias(),
             _ => panic!("Invalid keyword for type definition"),
         }
     }
@@ -157,6 +195,30 @@ impl SyntacticParser {
         Ok(TypeDef {
             name,
             body: TypeDefBody::Union(fields),
+            span,
+        })
+    }
+
+    fn parse_alias(&mut self) -> Result<TypeDef, Error> {
+        std::debug_assert!(self.is_keyword(TokenType::Use));
+        self.advance();
+        let name = match self.is_identifier() {
+            Some(name) => name,
+            None => {
+                return Err(self.error(&ErrorType::TypeDefinition, "Expected an identifier"));
+            }
+        };
+        let span = self.peek().unwrap().span;
+        self.advance();
+        if !self.is_keyword(TokenType::Eq) {
+            return Err(self.error(&ErrorType::TypeDefinition, "Expected `=`"));
+        }
+        self.advance();
+        let typ = self.parse_type_annotation()?;
+        self.end_line()?;
+        Ok(TypeDef {
+            name,
+            body: TypeDefBody::Alias(typ),
             span,
         })
     }
