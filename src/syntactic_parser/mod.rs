@@ -1,5 +1,5 @@
 use crate::syntax_ast;
-use crate::syntax_ast::Statement;
+use crate::syntax_ast::{Name, Statement};
 use crate::token;
 use crate::token::{Token, TokenType, TokenValue};
 
@@ -18,6 +18,7 @@ mod type_definition;
 
 #[derive(Debug, Clone)]
 pub(crate) enum ErrorType {
+    Name,
     Module,
     Import,
     LineEnd,
@@ -151,5 +152,22 @@ impl SyntacticParser {
         }
         self.advance();
         Ok(statements)
+    }
+
+    fn parse_name(&mut self) -> Result<Name, Error> {
+        std::debug_assert!(self.is_identifier().is_some());
+        let mut name = Vec::new();
+        name.push(self.is_identifier().unwrap());
+        self.advance();
+        while self.is_keyword(TokenType::DoubleColon) {
+            self.advance();
+            if let Some(id) = self.is_identifier() {
+                name.push(id);
+                self.advance();
+            } else {
+                return Err(self.error(&ErrorType::Expression, "Expected identifier"));
+            }
+        }
+        Ok(name)
     }
 }

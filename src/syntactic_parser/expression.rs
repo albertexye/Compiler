@@ -98,26 +98,31 @@ impl SyntacticParser {
     fn parse_prefix(&mut self) -> Result<Expression, Error> {
         let token = self.expect_token(&ErrorType::Expression, "No expression found")?;
         let start = token.span;
-        self.advance();
         Ok(match token.value {
-            TokenValue::Identifier(id) => Expression {
-                value: ExpressionValue::Identifier(id),
+            TokenValue::Identifier(_) => Expression {
+                value: ExpressionValue::Identifier(self.parse_name()?),
                 span: start - self.back().span,
             },
-            TokenValue::Literal(literal) => Expression {
-                value: ExpressionValue::Literal(match literal {
-                    token::Literal::UInt(uint) => syntax_ast::Literal::UInt(uint),
-                    token::Literal::Int(int) => syntax_ast::Literal::Int(int),
-                    token::Literal::Float(float) => syntax_ast::Literal::Float(float),
-                    token::Literal::String(string) => syntax_ast::Literal::String(string),
-                }),
-                span: start - self.back().span,
-            },
-            TokenValue::Keyword(punc) => match punc {
-                TokenType::OpenParen => self.parse_paren()?,
-                TokenType::OpenBracket => self.parse_array_literal()?,
-                _ => self.parse_infix_op(punc)?,
-            },
+            TokenValue::Literal(literal) => {
+                self.advance();
+                Expression {
+                    value: ExpressionValue::Literal(match literal {
+                        token::Literal::UInt(uint) => syntax_ast::Literal::UInt(uint),
+                        token::Literal::Int(int) => syntax_ast::Literal::Int(int),
+                        token::Literal::Float(float) => syntax_ast::Literal::Float(float),
+                        token::Literal::String(string) => syntax_ast::Literal::String(string),
+                    }),
+                    span: start - self.back().span,
+                }
+            }
+            TokenValue::Keyword(punc) => {
+                self.advance();
+                match punc {
+                    TokenType::OpenParen => self.parse_paren()?,
+                    TokenType::OpenBracket => self.parse_array_literal()?,
+                    _ => self.parse_infix_op(punc)?,
+                }
+            }
         })
     }
 
@@ -197,7 +202,6 @@ impl SyntacticParser {
     fn match_infix_operator(infix: TokenType) -> Option<(u8, BinaryOp)> {
         Some(match infix {
             TokenType::Dot => (100, BinaryOp::FieldAccess),
-            TokenType::DoubleColon => (100, BinaryOp::NameAccess),
             TokenType::Mul => (90, BinaryOp::Mul),
             TokenType::Div => (90, BinaryOp::Div),
             TokenType::Mod => (90, BinaryOp::Mod),

@@ -11,6 +11,8 @@ pub(crate) struct File {
     pub(crate) types: Vec<Scope<TypeDef>>,
 }
 
+pub(crate) type Name = Vec<String>;
+
 pub(crate) struct Scope<T> {
     pub(crate) public: bool,
     pub(crate) value: T,
@@ -42,7 +44,7 @@ pub(crate) enum Statement {
 }
 
 pub(crate) struct TypeAnnot {
-    pub(crate) base: String,
+    pub(crate) base: Name,
     pub(crate) modifiers: Vec<TypeModifier>,
     pub(crate) span: TokenSpan,
 }
@@ -90,7 +92,7 @@ pub(crate) enum ExpressionValue {
     Unary(Unary),
     Call(Call),
     Literal(Literal),
-    Identifier(String),
+    Identifier(Name),
 }
 
 pub(crate) struct Binary {
@@ -119,7 +121,6 @@ pub(crate) enum BinaryOp {
     LogicalAnd,
     LogicalOr,
     Indexing,
-    NameAccess,
     FieldAccess,
 }
 

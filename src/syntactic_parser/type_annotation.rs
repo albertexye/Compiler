@@ -8,16 +8,18 @@ impl SyntacticParser {
         loop {
             let token =
                 self.expect_token(&ErrorType::TypeAnnotation, "Expected a type annotation")?;
-            self.advance();
             match token.value {
-                TokenValue::Identifier(id) => {
+                TokenValue::Identifier(_) => {
                     return Ok(TypeAnnot {
-                        base: id,
+                        base: self.parse_name()?,
                         modifiers,
                         span: token.span - start.unwrap().span,
                     });
                 }
-                TokenValue::Keyword(kw) => modifiers.push(self.parse_type_modifier(kw)?),
+                TokenValue::Keyword(kw) => {
+                    modifiers.push(self.parse_type_modifier(kw)?);
+                    self.advance();
+                }
                 _ => {
                     return Err(
                         self.error(&ErrorType::TypeAnnotation, "Expected a type annotation")
