@@ -3,15 +3,15 @@ use super::*;
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
-const TOKEN_TYPES_STR: [&str; 63] = [
+const TOKEN_TYPES_STR: [&str; 64] = [
     ",", ";", ":", "::", ".", "(", ")", "[", "]", "{", "}", "+", "+=", "-", "-=", "*", "*=", "/",
     "/=", "%", "%=", "<<", "<<=", ">>", ">>=", "&", "&=", "|", "|=", "^", "^=", "~", "and", "or",
     "!", "==", "!=", ">", ">=", "<", "<=", "=", "->", "=>", "if", "else", "match", "while", "for",
     "break", "continue", "return", "fn", "let", "var", "struct", "enum", "union", "pub", "prv",
-    "module", "import", "use",
+    "mod", "module", "import", "use",
 ];
 
-const TOKEN_TYPES_ENUM: [TokenType; 63] = [
+const TOKEN_TYPES_ENUM: [TokenType; 64] = [
     TokenType::Comma,
     TokenType::Semicolon,
     TokenType::Colon,
@@ -31,8 +31,8 @@ const TOKEN_TYPES_ENUM: [TokenType; 63] = [
     TokenType::MulEq,
     TokenType::Div,
     TokenType::DivEq,
-    TokenType::Mod,
-    TokenType::ModEq,
+    TokenType::Modulo,
+    TokenType::ModuloEq,
     TokenType::LeftShift,
     TokenType::LeftShiftEq,
     TokenType::RightShift,
@@ -72,6 +72,7 @@ const TOKEN_TYPES_ENUM: [TokenType; 63] = [
     TokenType::Union,
     TokenType::Pub,
     TokenType::Prv,
+    TokenType::Mod,
     TokenType::Module,
     TokenType::Import,
     TokenType::Use,

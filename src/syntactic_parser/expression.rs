@@ -204,7 +204,7 @@ impl SyntacticParser {
             TokenType::Dot => (100, BinaryOp::FieldAccess),
             TokenType::Mul => (90, BinaryOp::Mul),
             TokenType::Div => (90, BinaryOp::Div),
-            TokenType::Mod => (90, BinaryOp::Mod),
+            TokenType::Modulo => (90, BinaryOp::Mod),
             TokenType::Plus => (80, BinaryOp::Plus),
             TokenType::Minus => (80, BinaryOp::Minus),
             TokenType::LeftShift => (70, BinaryOp::LeftShift),

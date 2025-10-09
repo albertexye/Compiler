@@ -35,7 +35,7 @@ impl SyntacticParser {
             TokenType::MinusEq => AssignmentType::Minus,
             TokenType::MulEq => AssignmentType::Mul,
             TokenType::DivEq => AssignmentType::Div,
-            TokenType::ModEq => AssignmentType::Mod,
+            TokenType::ModuloEq => AssignmentType::Mod,
             TokenType::LeftShiftEq => AssignmentType::LeftShift,
             TokenType::RightShiftEq => AssignmentType::RightShift,
             TokenType::BitAndEq => AssignmentType::BitAnd,
