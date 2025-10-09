@@ -13,8 +13,14 @@ pub(crate) struct File {
 
 pub(crate) type Name = Vec<String>;
 
+pub(crate) enum Visibility {
+    Public,
+    Private,
+    Module,
+}
+
 pub(crate) struct Scope<T> {
-    pub(crate) public: bool,
+    pub(crate) visibility: Visibility,
     pub(crate) value: T,
 }
 

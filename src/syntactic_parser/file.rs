@@ -1,3 +1,5 @@
+use crate::syntax_ast::Visibility;
+
 use super::*;
 use syntax_ast::{File, Scope};
 
@@ -9,7 +11,7 @@ impl SyntacticParser {
         let mut functions = Vec::new();
         let mut types = Vec::new();
         while self.peek().is_some() {
-            let public = self.is_public()?;
+            let visibility = self.parse_visibility()?;
             let token = self.expect_token(&ErrorType::Module, "Missing symbol definition")?;
             let TokenValue::Keyword(kw) = token.value else {
                 return Err(self.error(&ErrorType::Module, "Expected keyword"));
@@ -17,19 +19,19 @@ impl SyntacticParser {
             match kw {
                 TokenType::Struct | TokenType::Enum | TokenType::Union | TokenType::Use => {
                     types.push(Scope {
-                        public,
+                        visibility,
                         value: self.parse_type_definition()?,
                     });
                 }
                 TokenType::Let | TokenType::Var => {
                     globals.push(Scope {
-                        public,
+                        visibility,
                         value: self.parse_declaration()?,
                     });
                 }
                 TokenType::Fn => {
                     functions.push(Scope {
-                        public,
+                        visibility,
                         value: self.parse_function()?,
                     });
                 }
@@ -48,15 +50,18 @@ impl SyntacticParser {
         })
     }
 
-    fn is_public(&mut self) -> Result<bool, Error> {
+    fn parse_visibility(&mut self) -> Result<Visibility, Error> {
         if self.is_keyword(TokenType::Pub) {
             self.advance();
-            Ok(true)
+            Ok(Visibility::Public)
         } else if self.is_keyword(TokenType::Prv) {
             self.advance();
-            Ok(false)
+            Ok(Visibility::Private)
+        } else if self.is_keyword(TokenType::Mod) {
+            self.advance();
+            Ok(Visibility::Module)
         } else {
-            Err(self.error(&ErrorType::Module, "Expected scope specifier"))
+            Err(self.error(&ErrorType::Module, "Expected visibility specifier"))
         }
     }
 
