@@ -60,7 +60,7 @@ impl SyntacticParser {
         self.advance();
         let name = self
             .is_identifier()
-            .ok_or(self.error(&ErrorType::TypeDefinition, "Expected an identifier"))?;
+            .ok_or(self.error(ErrorType::TypeDefinition, "Expected an identifier"))?;
         let span = self.peek().unwrap().span;
         self.advance();
         let fields = self.parse_struct_body()?;
@@ -73,7 +73,7 @@ impl SyntacticParser {
 
     fn parse_struct_body(&mut self) -> Result<HashMap<String, TypeAnnot>, Error> {
         if !self.is_keyword(TokenType::OpenBracket) {
-            return Err(self.error(&ErrorType::TypeDefinition, "Expected `{`"));
+            return Err(self.error(ErrorType::TypeDefinition, "Expected `{`"));
         }
         self.advance();
         let mut fields = HashMap::new();
@@ -81,7 +81,7 @@ impl SyntacticParser {
             let (name, field_type) = self.parse_struct_field()?;
             if fields.contains_key(&name) {
                 return Err(self.error(
-                    &ErrorType::TypeDefinition,
+                    ErrorType::TypeDefinition,
                     &format!("Duplicated struct field `{}`", name),
                 ));
             }
@@ -97,11 +97,11 @@ impl SyntacticParser {
     fn parse_struct_field(&mut self) -> Result<(String, TypeAnnot), Error> {
         let id = self
             .is_identifier()
-            .ok_or(self.error(&ErrorType::TypeDefinition, "Expected an identifier"))?;
+            .ok_or(self.error(ErrorType::TypeDefinition, "Expected an identifier"))?;
         self.advance();
         if !self.is_keyword(TokenType::Colon) {
             return Err(self.error(
-                &ErrorType::TypeDefinition,
+                ErrorType::TypeDefinition,
                 "Expected `:` after an identifier",
             ));
         }
@@ -115,7 +115,7 @@ impl SyntacticParser {
         self.advance();
         let name = self
             .is_identifier()
-            .ok_or(self.error(&ErrorType::TypeDefinition, "Expected an identifier"))?;
+            .ok_or(self.error(ErrorType::TypeDefinition, "Expected an identifier"))?;
         let span = self.peek().unwrap().span;
         self.advance();
         let fields = self.parse_enum_body()?;
@@ -128,7 +128,7 @@ impl SyntacticParser {
 
     fn parse_enum_body(&mut self) -> Result<HashMap<String, u64>, Error> {
         if !self.is_keyword(TokenType::OpenBracket) {
-            return Err(self.error(&ErrorType::TypeDefinition, "Expected `{`"));
+            return Err(self.error(ErrorType::TypeDefinition, "Expected `{`"));
         }
         self.advance();
         let mut fields = HashMap::new();
@@ -138,13 +138,13 @@ impl SyntacticParser {
             let (name, value) = self.parse_enum_field(prev_value)?;
             if fields.contains_key(&name) {
                 return Err(self.error(
-                    &ErrorType::TypeDefinition,
+                    ErrorType::TypeDefinition,
                     &format!("Duplicated enum field `{}`", name),
                 ));
             }
             if values.contains(&value) {
                 return Err(self.error(
-                    &ErrorType::TypeDefinition,
+                    ErrorType::TypeDefinition,
                     &format!("Duplicated enum value `{}`", name),
                 ));
             }
@@ -155,7 +155,7 @@ impl SyntacticParser {
                 if self.is_keyword(TokenType::CloseBracket) {
                     break;
                 } else {
-                    return Err(self.error(&ErrorType::TypeDefinition, "Expected `}`"));
+                    return Err(self.error(ErrorType::TypeDefinition, "Expected `}`"));
                 }
             }
             self.advance();
@@ -167,14 +167,14 @@ impl SyntacticParser {
     fn parse_enum_field(&mut self, prev: u64) -> Result<(String, u64), Error> {
         let id = self
             .is_identifier()
-            .ok_or(self.error(&ErrorType::TypeDefinition, "Expected an identifier"))?;
+            .ok_or(self.error(ErrorType::TypeDefinition, "Expected an identifier"))?;
         self.advance();
         if !self.is_keyword(TokenType::Eq) {
             return Ok((id, prev + 1));
         }
         self.advance();
         let value = self.is_uint().ok_or(self.error(
-            &ErrorType::TypeDefinition,
+            ErrorType::TypeDefinition,
             "Expected a positive integer value",
         ))?;
         Ok((id, value))
@@ -186,7 +186,7 @@ impl SyntacticParser {
         let name = match self.is_identifier() {
             Some(name) => name,
             None => {
-                return Err(self.error(&ErrorType::TypeDefinition, "Expected an identifier"));
+                return Err(self.error(ErrorType::TypeDefinition, "Expected an identifier"));
             }
         };
         let span = self.peek().unwrap().span;
@@ -205,13 +205,13 @@ impl SyntacticParser {
         let name = match self.is_identifier() {
             Some(name) => name,
             None => {
-                return Err(self.error(&ErrorType::TypeDefinition, "Expected an identifier"));
+                return Err(self.error(ErrorType::TypeDefinition, "Expected an identifier"));
             }
         };
         let span = self.peek().unwrap().span;
         self.advance();
         if !self.is_keyword(TokenType::Eq) {
-            return Err(self.error(&ErrorType::TypeDefinition, "Expected `=`"));
+            return Err(self.error(ErrorType::TypeDefinition, "Expected `=`"));
         }
         self.advance();
         let typ = self.parse_type_annotation()?;

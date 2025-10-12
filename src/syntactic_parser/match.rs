@@ -8,7 +8,7 @@ impl SyntacticParser {
         let value = self.parse_expression()?;
         self.expect_keyword(
             TokenType::OpenBracket,
-            &ErrorType::Match,
+            ErrorType::Match,
             "Expected match body",
         )?;
         self.advance();
@@ -19,7 +19,7 @@ impl SyntacticParser {
                 && &id == "_"
             {
                 if default.is_some() {
-                    return Err(self.error(&ErrorType::Match, "Multiple default branches"));
+                    return Err(self.error(ErrorType::Match, "Multiple default branches"));
                 }
                 self.advance();
                 default = Some(self.parse_case_body()?);
@@ -44,7 +44,7 @@ impl SyntacticParser {
     }
 
     fn parse_case_body(&mut self) -> Result<Vec<Statement>, Error> {
-        self.expect_keyword(TokenType::MatchCase, &ErrorType::Match, "Expected case")?;
+        self.expect_keyword(TokenType::MatchCase, ErrorType::Match, "Expected case")?;
         self.advance();
         self.parse_block()
     }

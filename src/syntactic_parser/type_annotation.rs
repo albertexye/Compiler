@@ -7,7 +7,7 @@ impl SyntacticParser {
         let start = self.peek();
         loop {
             let token =
-                self.expect_token(&ErrorType::TypeAnnotation, "Expected a type annotation")?;
+                self.expect_token(ErrorType::TypeAnnotation, "Expected a type annotation")?;
             match token.value {
                 TokenValue::Identifier(_) => {
                     return Ok(TypeAnnot {
@@ -22,7 +22,7 @@ impl SyntacticParser {
                 }
                 _ => {
                     return Err(
-                        self.error(&ErrorType::TypeAnnotation, "Expected a type annotation")
+                        self.error(ErrorType::TypeAnnotation, "Expected a type annotation")
                     );
                 }
             }
@@ -34,7 +34,7 @@ impl SyntacticParser {
             TokenType::Mul => self.parse_pointer()?,
             TokenType::OpenBrace => self.parse_array_or_slice()?,
             _ => {
-                return Err(self.error(&ErrorType::TypeAnnotation, "Expected a type annotation"));
+                return Err(self.error(ErrorType::TypeAnnotation, "Expected a type annotation"));
             }
         })
     }
@@ -56,7 +56,7 @@ impl SyntacticParser {
             (false, 0)
         };
         if !self.is_keyword(TokenType::CloseBrace) {
-            return Err(self.error(&ErrorType::TypeAnnotation, "Expected `]`"));
+            return Err(self.error(ErrorType::TypeAnnotation, "Expected `]`"));
         }
         self.advance();
         let mutable = self.is_mutable()?;

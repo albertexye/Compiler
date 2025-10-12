@@ -1,44 +1,22 @@
-use crate::syntax_ast::Visibility;
+use std::collections::{HashMap, HashSet};
+
+use crate::syntax_ast::{Declaration, Function, TypeDef, Visibility};
 
 use super::*;
 use syntax_ast::{File, Scope};
 
 impl SyntacticParser {
-    pub(crate) fn parse_file(&mut self, filename: &str) -> Result<File, Error> {
-        let module = self.parse_module()?;
+    pub(crate) fn parse_file(&mut self, filename: &str, module_name: &str) -> Result<File, Error> {
+        let module = self.parse_module_declaration()?;
+        if &module != module_name {
+            return Err(self.error(ErrorType::Module, "Incorrect module name"));
+        }
         let imports = self.parse_imports()?;
-        let mut globals = Vec::new();
-        let mut functions = Vec::new();
-        let mut types = Vec::new();
+        let mut types = HashMap::new();
+        let mut globals = HashMap::new();
+        let mut functions = HashMap::new();
         while self.peek().is_some() {
-            let visibility = self.parse_visibility()?;
-            let token = self.expect_token(&ErrorType::Module, "Missing symbol definition")?;
-            let TokenValue::Keyword(kw) = token.value else {
-                return Err(self.error(&ErrorType::Module, "Expected keyword"));
-            };
-            match kw {
-                TokenType::Struct | TokenType::Enum | TokenType::Union | TokenType::Use => {
-                    types.push(Scope {
-                        visibility,
-                        value: self.parse_type_definition()?,
-                    });
-                }
-                TokenType::Let | TokenType::Var => {
-                    globals.push(Scope {
-                        visibility,
-                        value: self.parse_declaration()?,
-                    });
-                }
-                TokenType::Fn => {
-                    functions.push(Scope {
-                        visibility,
-                        value: self.parse_function()?,
-                    });
-                }
-                _ => {
-                    return Err(self.error(&ErrorType::Module, "Invalid top level definition"));
-                }
-            }
+            self.parse_content(&mut types, &mut globals, &mut functions)?;
         }
         Ok(File {
             name: filename.to_string(),
@@ -48,6 +26,52 @@ impl SyntacticParser {
             functions,
             types,
         })
+    }
+
+    fn parse_content(
+        &mut self,
+        types: &mut HashMap<String, Scope<TypeDef>>,
+        globals: &mut HashMap<String, Scope<Declaration>>,
+        functions: &mut HashMap<String, Scope<Function>>,
+    ) -> Result<(), Error> {
+        let visibility = self.parse_visibility()?;
+        let token = self.expect_token(ErrorType::Module, "Missing symbol definition")?;
+        let TokenValue::Keyword(kw) = token.value else {
+            return Err(self.error(ErrorType::Module, "Expected keyword"));
+        };
+        match kw {
+            TokenType::Struct | TokenType::Enum | TokenType::Union | TokenType::Use => {
+                let value = self.parse_type_definition()?;
+                if types
+                    .insert(value.name.clone(), Scope { visibility, value })
+                    .is_some()
+                {
+                    return Err(self.error(ErrorType::Module, "Duplicated type name"));
+                }
+            }
+            TokenType::Let | TokenType::Var => {
+                let value = self.parse_declaration()?;
+                if globals
+                    .insert(value.name.clone(), Scope { visibility, value })
+                    .is_some()
+                {
+                    return Err(self.error(ErrorType::Module, "Duplicated global name"));
+                }
+            }
+            TokenType::Fn => {
+                let value = self.parse_function()?;
+                if functions
+                    .insert(value.name.clone(), Scope { visibility, value })
+                    .is_some()
+                {
+                    return Err(self.error(ErrorType::Module, "Duplicated function name"));
+                }
+            }
+            _ => {
+                return Err(self.error(ErrorType::Module, "Invalid top level definition"));
+            }
+        }
+        Ok(())
     }
 
     fn parse_visibility(&mut self) -> Result<Visibility, Error> {
@@ -61,30 +85,32 @@ impl SyntacticParser {
             self.advance();
             Ok(Visibility::Module)
         } else {
-            Err(self.error(&ErrorType::Module, "Expected visibility specifier"))
+            Err(self.error(ErrorType::Module, "Expected visibility specifier"))
         }
     }
 
-    fn parse_module(&mut self) -> Result<String, Error> {
+    fn parse_module_declaration(&mut self) -> Result<String, Error> {
         if !self.is_keyword(TokenType::Module) {
             return Err(self.error(
-                &ErrorType::Module,
+                ErrorType::Module,
                 "A file must start with a module declaration",
             ));
         }
         self.advance();
         let name = self.is_identifier().ok_or(self.error(
-            &ErrorType::Module,
+            ErrorType::Module,
             "Keyword `module` must be followed by a valid identifier",
         ))?;
         self.advance();
         Ok(name)
     }
 
-    fn parse_imports(&mut self) -> Result<Vec<String>, Error> {
-        let mut imports = Vec::new();
+    fn parse_imports(&mut self) -> Result<HashSet<String>, Error> {
+        let mut imports = HashSet::new();
         while self.is_keyword(TokenType::Import) {
-            imports.push(self.parse_import()?);
+            if !imports.insert(self.parse_import()?) {
+                return Err(self.error(ErrorType::Import, "Duplicated imports"));
+            }
         }
         Ok(imports)
     }
@@ -93,7 +119,7 @@ impl SyntacticParser {
         std::debug_assert!(self.is_keyword(TokenType::Import));
         self.advance();
         let name = self.is_identifier().ok_or(self.error(
-            &ErrorType::Import,
+            ErrorType::Import,
             "Keyword `import` must be followed by a valid identifier",
         ))?;
         self.advance();

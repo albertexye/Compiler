@@ -1,3 +1,5 @@
+use std::io;
+
 use crate::syntax_ast;
 use crate::syntax_ast::{Name, Statement};
 use crate::token;
@@ -16,7 +18,7 @@ mod statement;
 mod type_annotation;
 mod type_definition;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) enum ErrorType {
     Name,
     Module,
@@ -30,6 +32,9 @@ pub(crate) enum ErrorType {
     Conditional,
     Function,
     Match,
+    ModuleSchema(serde_json::Error),
+    ModuleNotFound,
+    Io(io::Error),
 }
 
 #[derive(Debug)]
@@ -45,6 +50,18 @@ pub struct SyntacticParser {
 }
 
 impl SyntacticParser {
+    pub(crate) fn parse(
+        tokens: Vec<Token>,
+        filename: &str,
+        module_name: &str,
+    ) -> Result<syntax_ast::File, Error> {
+        let mut parser = SyntacticParser {
+            tokens,
+            index: 0usize,
+        };
+        parser.parse_file(filename, module_name)
+    }
+
     fn peek(&self) -> Option<Token> {
         self.tokens.get(self.index).cloned()
     }
@@ -53,23 +70,26 @@ impl SyntacticParser {
         self.tokens[self.index - 1].clone()
     }
 
-    fn error(&self, error_type: &ErrorType, message: &str) -> Error {
+    fn error(&self, error_type: ErrorType, message: &str) -> Error {
         Error {
-            typ: error_type.clone(),
+            typ: error_type,
             msg: message.to_string(),
             token: self.peek(),
         }
     }
 
-    fn expect_token(&self, error_type: &ErrorType, message: &str) -> Result<Token, Error> {
+    fn expect_token(&self, error_type: ErrorType, message: &str) -> Result<Token, Error> {
         match self.peek() {
             Some(token) => Ok(token),
             None => Err(self.error(error_type, message)),
         }
     }
 
-    fn expect_identifier(&self, error_type: &ErrorType, message: &str) -> Result<String, Error> {
-        let token = self.expect_token(error_type, message)?;
+    fn expect_identifier(&self, error_type: ErrorType, message: &str) -> Result<String, Error> {
+        let token = match self.peek() {
+            Some(token) => token,
+            None => return Err(self.error(error_type, message)),
+        };
         match token.value {
             TokenValue::Identifier(id) => Ok(id),
             _ => Err(self.error(error_type, message)),
@@ -79,7 +99,7 @@ impl SyntacticParser {
     fn expect_keyword(
         &self,
         kw: TokenType,
-        error_type: &ErrorType,
+        error_type: ErrorType,
         message: &str,
     ) -> Result<(), Error> {
         if !self.is_keyword(kw) {
@@ -105,7 +125,7 @@ impl SyntacticParser {
 
     fn end_line(&mut self) -> Result<(), Error> {
         if !self.is_keyword(TokenType::Semicolon) {
-            Err(self.error(&ErrorType::LineEnd, "`;` expected at end of line"))
+            Err(self.error(ErrorType::LineEnd, "`;` expected at end of line"))
         } else {
             self.advance();
             Ok(())
@@ -127,7 +147,7 @@ impl SyntacticParser {
             Ok(true)
         } else {
             Err(self.error(
-                &ErrorType::TypeAnnotation,
+                ErrorType::TypeAnnotation,
                 "Type annotations must specify mutability",
             ))
         }
@@ -143,7 +163,7 @@ impl SyntacticParser {
 
     fn parse_block(&mut self) -> Result<Vec<Statement>, Error> {
         if !self.is_keyword(TokenType::OpenBracket) {
-            return Err(self.error(&ErrorType::Conditional, "Expected contional body"));
+            return Err(self.error(ErrorType::Conditional, "Expected contional body"));
         }
         self.advance();
         let mut statements = Vec::new();
@@ -165,7 +185,7 @@ impl SyntacticParser {
                 name.push(id);
                 self.advance();
             } else {
-                return Err(self.error(&ErrorType::Expression, "Expected identifier"));
+                return Err(self.error(ErrorType::Expression, "Expected identifier"));
             }
         }
         Ok(name)

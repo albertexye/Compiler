@@ -5,16 +5,16 @@ impl SyntacticParser {
     pub(crate) fn parse_assignment_or_expression(&mut self) -> Result<Statement, Error> {
         let start = self.peek().unwrap().span;
         let left = self.parse_expression()?;
-        let token = self.expect_token(&ErrorType::Statement, "Invalid statement")?;
+        let token = self.expect_token(ErrorType::Statement, "Invalid statement")?;
         let TokenValue::Keyword(punc) = token.value else {
-            return Err(self.error(&ErrorType::Statement, "Expected assignment operator"));
+            return Err(self.error(ErrorType::Statement, "Expected assignment operator"));
         };
         if punc == TokenType::Semicolon {
             self.advance();
             return Ok(Statement::Expression(left));
         }
         let typ = SyntacticParser::match_assignment_type(punc)
-            .ok_or(self.error(&ErrorType::Statement, "Invalid expression"))?;
+            .ok_or(self.error(ErrorType::Statement, "Invalid expression"))?;
         self.advance();
         let right = self.parse_expression()?;
         let end = self.peek();

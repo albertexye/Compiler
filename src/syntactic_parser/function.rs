@@ -6,7 +6,7 @@ impl SyntacticParser {
         std::debug_assert!(self.is_keyword(TokenType::Fn));
         self.advance();
         let Some(name) = self.is_identifier() else {
-            return Err(self.error(&ErrorType::Function, "Expected function name"));
+            return Err(self.error(ErrorType::Function, "Expected function name"));
         };
         let span = self.peek().unwrap().span;
         self.advance();
@@ -27,7 +27,7 @@ impl SyntacticParser {
             return Ok(None);
         }
         if !self.is_keyword(TokenType::ReturnType) {
-            return Err(self.error(&ErrorType::Function, "Expected function name"));
+            return Err(self.error(ErrorType::Function, "Expected function name"));
         }
         self.advance();
         Ok(Some(self.parse_type_annotation()?))
@@ -35,7 +35,7 @@ impl SyntacticParser {
 
     fn parse_arguments(&mut self) -> Result<Vec<FunctionArg>, Error> {
         if !self.is_keyword(TokenType::OpenParen) {
-            return Err(self.error(&ErrorType::Function, "Expected argument list"));
+            return Err(self.error(ErrorType::Function, "Expected argument list"));
         }
         self.advance();
         let mut arguments = Vec::new();
@@ -45,7 +45,7 @@ impl SyntacticParser {
                 break;
             }
             if !self.is_keyword(TokenType::Comma) {
-                return Err(self.error(&ErrorType::Function, "Expected `)`"));
+                return Err(self.error(ErrorType::Function, "Expected `)`"));
             }
             self.advance();
         }
@@ -55,12 +55,12 @@ impl SyntacticParser {
 
     fn parse_argument(&mut self) -> Result<FunctionArg, Error> {
         let Some(name) = self.is_identifier() else {
-            return Err(self.error(&ErrorType::Function, "Expected argument name"));
+            return Err(self.error(ErrorType::Function, "Expected argument name"));
         };
         let start = self.peek().unwrap().span;
         self.advance();
         if !self.is_keyword(TokenType::Colon) {
-            return Err(self.error(&ErrorType::Function, "Argument type must be specified"));
+            return Err(self.error(ErrorType::Function, "Argument type must be specified"));
         }
         self.advance();
         let typ = self.parse_type_annotation()?;

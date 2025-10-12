@@ -13,6 +13,7 @@ pub(crate) struct File {
     pub(crate) functions: Vec<Function>,
     pub(crate) types: Vec<TypeDef>,
     pub(crate) exported: Vec<Symbol>,
+    pub(crate) protected: Vec<Symbol>,
 }
 
 pub(crate) enum Symbol {

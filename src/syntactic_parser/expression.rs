@@ -13,7 +13,7 @@ impl SyntacticParser {
     fn parse_paren(&mut self) -> Result<Expression, Error> {
         let exp = self.pratt_parse(0)?;
         if !self.is_keyword(TokenType::CloseParen) {
-            return Err(self.error(&ErrorType::Expression, "Unclosed parenthesis"));
+            return Err(self.error(ErrorType::Expression, "Unclosed parenthesis"));
         }
         self.advance();
         Ok(exp)
@@ -30,7 +30,7 @@ impl SyntacticParser {
                 break;
             }
             if !self.is_keyword(TokenType::Comma) {
-                return Err(self.error(&ErrorType::Expression, "Expected `,`"));
+                return Err(self.error(ErrorType::Expression, "Expected `,`"));
             }
             self.advance();
         }
@@ -56,10 +56,10 @@ impl SyntacticParser {
             if self.is_keyword(TokenType::CloseBracket) {
                 break;
             }
-            let field = self.expect_identifier(&ErrorType::Expression, "Expected field name")?;
+            let field = self.expect_identifier(ErrorType::Expression, "Expected field name")?;
             self.advance();
             if !self.is_keyword(TokenType::Colon) {
-                return Err(self.error(&ErrorType::Expression, "Expected `:`"));
+                return Err(self.error(ErrorType::Expression, "Expected `:`"));
             }
             self.advance();
             let exp = self.parse_expression()?;
@@ -68,7 +68,7 @@ impl SyntacticParser {
                 break;
             }
             if !self.is_keyword(TokenType::Comma) {
-                return Err(self.error(&ErrorType::Expression, "Expected `,`"));
+                return Err(self.error(ErrorType::Expression, "Expected `,`"));
             }
         }
         self.advance();
@@ -84,7 +84,7 @@ impl SyntacticParser {
             TokenType::BitNot => UnaryOp::BitNot,
             TokenType::LogicalNot => UnaryOp::LogicalNot,
             _ => {
-                return Err(self.error(&ErrorType::Expression, "Invalid unary operator"));
+                return Err(self.error(ErrorType::Expression, "Invalid unary operator"));
             }
         };
         let operand = Box::new(self.pratt_parse(100)?);
@@ -96,7 +96,7 @@ impl SyntacticParser {
     }
 
     fn parse_prefix(&mut self) -> Result<Expression, Error> {
-        let token = self.expect_token(&ErrorType::Expression, "No expression found")?;
+        let token = self.expect_token(ErrorType::Expression, "No expression found")?;
         let start = token.span;
         Ok(match token.value {
             TokenValue::Identifier(_) => Expression {
@@ -147,7 +147,7 @@ impl SyntacticParser {
                     right: Box::new(self.parse_expression()?),
                 });
                 if !self.is_keyword(TokenType::CloseParen) {
-                    return Err(self.error(&ErrorType::Expression, "Expected `]`"));
+                    return Err(self.error(ErrorType::Expression, "Expected `]`"));
                 }
                 self.advance();
                 exp
@@ -173,7 +173,7 @@ impl SyntacticParser {
             let start = token.span;
             self.advance();
             let TokenValue::Keyword(punc) = token.value else {
-                return Err(self.error(&ErrorType::Expression, "Expected an operator"));
+                return Err(self.error(ErrorType::Expression, "Expected an operator"));
             };
             if SyntacticParser::is_postfix_op(punc) {
                 exp = self.parse_postfix(punc, exp)?;

@@ -1,14 +1,27 @@
-use std::collections::HashMap;
+use std::{
+    collections::{HashMap, HashSet},
+    path::PathBuf,
+};
 
 use crate::token::TokenSpan;
+
+pub(crate) struct Ast {
+    pub(crate) entry: PathBuf,
+    pub(crate) modules: HashMap<PathBuf, Module>,
+}
+
+pub(crate) struct Module {
+    pub(crate) name: String,
+    pub(crate) files: HashMap<String, File>,
+}
 
 pub(crate) struct File {
     pub(crate) name: String,
     pub(crate) module: String,
-    pub(crate) imports: Vec<String>,
-    pub(crate) globals: Vec<Scope<Declaration>>,
-    pub(crate) functions: Vec<Scope<Function>>,
-    pub(crate) types: Vec<Scope<TypeDef>>,
+    pub(crate) imports: HashSet<String>,
+    pub(crate) globals: HashMap<String, Scope<Declaration>>,
+    pub(crate) functions: HashMap<String, Scope<Function>>,
+    pub(crate) types: HashMap<String, Scope<TypeDef>>,
 }
 
 pub(crate) type Name = Vec<String>;
