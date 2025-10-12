@@ -32,9 +32,6 @@ pub(crate) enum ErrorType {
     Conditional,
     Function,
     Match,
-    ModuleSchema(serde_json::Error),
-    ModuleNotFound,
-    Io(io::Error),
 }
 
 #[derive(Debug)]

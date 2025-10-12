@@ -44,7 +44,7 @@ fn path_to_string(path: &Path) -> Result<String, Error> {
 }
 
 fn read_file(path: &Path) -> Result<String, Error> {
-    let path_str = path_to_string(&path)?;
+    let path_str = path_to_string(path)?;
     if !path.exists() {
         return Err(Error {
             typ: ErrorType::ModuleNotFound,
@@ -92,7 +92,7 @@ fn wrap_io_result<T>(result: Result<T, io::Error>, msg: String) -> Result<T, Err
 }
 
 fn get_source_files(path: &Path) -> Result<Vec<PathBuf>, Error> {
-    let path_str = path_to_string(&path)?;
+    let path_str = path_to_string(path)?;
     let entries = wrap_io_result(
         fs::read_dir(path),
         format!("Failed to read path: {}", path_str),

@@ -8,7 +8,7 @@ use syntax_ast::{File, Scope};
 impl SyntacticParser {
     pub(crate) fn parse_file(&mut self, filename: &str, module_name: &str) -> Result<File, Error> {
         let module = self.parse_module_declaration()?;
-        if &module != module_name {
+        if module != module_name {
             return Err(self.error(ErrorType::Module, "Incorrect module name"));
         }
         let imports = self.parse_imports()?;
