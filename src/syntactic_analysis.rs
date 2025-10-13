@@ -1,11 +1,11 @@
 use serde::Deserialize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::{fs, io};
 
 use crate::lexer::Lexer;
 use crate::syntactic_parser::SyntacticParser;
-use crate::syntax_ast::{File, Module};
+use crate::syntax_ast::{Ast, File, Module};
 use crate::{lexer, syntactic_parser};
 
 #[derive(Deserialize)]
@@ -75,7 +75,12 @@ fn parse_definition(directory: &Path) -> Result<Definition, Error> {
     };
     let mut dependencies = HashMap::new();
     for (name, path) in schema.dependencies {
-        let path = Path::new(&path).to_path_buf();
+        let mut path = PathBuf::from(&path);
+        if path.is_relative() {
+            let mut base = directory.to_path_buf();
+            base.push(path);
+            path = base;
+        }
         dependencies.insert(name, path);
     }
     Ok(Definition { dependencies })
@@ -143,6 +148,7 @@ fn compile_file(path: &Path, module_name: &str) -> Result<(String, File), Error>
 }
 
 fn compile_module(path: &Path) -> Result<Module, Error> {
+    let definition = parse_definition(path)?;
     let files = get_source_files(path)?;
     let module_name = path.file_name().unwrap().to_str().unwrap().to_string();
     let mut file_map = HashMap::new();
@@ -153,5 +159,40 @@ fn compile_module(path: &Path) -> Result<Module, Error> {
     Ok(Module {
         name: module_name,
         files: file_map,
+        dependencies: definition.dependencies,
+    })
+}
+
+pub(crate) fn compile(path: &Path) -> Result<Ast, Error> {
+    let mut modules = HashMap::new();
+    let mut queue = HashSet::new();
+    let path = if path.is_relative() {
+        match std::path::absolute(path) {
+            Ok(path) => path,
+            Err(err) => {
+                return Err(Error {
+                    typ: ErrorType::Io(err),
+                    msg: format!("Invalid path: {}", path_to_string(path)?),
+                });
+            }
+        }
+    } else {
+        path.to_path_buf()
+    };
+    queue.insert(path.clone());
+    while !queue.is_empty() {
+        let path = queue.iter().next().unwrap().clone();
+        let module = compile_module(&path)?;
+        for dep in module.dependencies.values() {
+            if !modules.contains_key(dep) && !queue.contains(dep) {
+                queue.insert(dep.clone());
+            }
+        }
+        queue.remove(&path);
+        modules.insert(path, module);
+    }
+    Ok(Ast {
+        entry: path,
+        modules,
     })
 }

@@ -12,7 +12,8 @@ pub(crate) struct Ast {
 
 pub(crate) struct Module {
     pub(crate) name: String,
-    pub(crate) files: HashMap<String, File>,
+    pub(crate) files: HashMap<String, File>, // filename: file
+    pub(crate) dependencies: HashMap<String, PathBuf>, // import name: module path
 }
 
 pub(crate) struct File {
