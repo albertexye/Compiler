@@ -2,7 +2,7 @@ use super::*;
 use syntax_ast::{Function, FunctionArg, TypeAnnot};
 
 impl SyntacticParser {
-    pub(crate) fn parse_function(&mut self) -> Result<Function, Error> {
+    pub(super) fn parse_function(&mut self) -> Result<Function, Error> {
         std::debug_assert!(self.is_keyword(TokenType::Fn));
         self.advance();
         let Some(name) = self.is_identifier() else {

@@ -2,7 +2,7 @@ use super::*;
 use syntax_ast::{Assignment, AssignmentType};
 
 impl SyntacticParser {
-    pub(crate) fn parse_assignment_or_expression(&mut self) -> Result<Statement, Error> {
+    pub(super) fn parse_assignment_or_expression(&mut self) -> Result<Statement, Error> {
         let start = self.peek().unwrap().span;
         let left = self.parse_expression()?;
         let token = self.expect_token(ErrorType::Statement, "Invalid statement")?;

@@ -2,7 +2,7 @@ use super::*;
 use syntax_ast::Loop;
 
 impl SyntacticParser {
-    pub(crate) fn parse_loop(&mut self) -> Result<Statement, Error> {
+    pub(super) fn parse_loop(&mut self) -> Result<Statement, Error> {
         Ok(Statement::Loop(if self.is_keyword(TokenType::For) {
             self.parse_for()?
         } else if self.is_keyword(TokenType::While) {

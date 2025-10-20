@@ -2,7 +2,7 @@ use super::*;
 use syntax_ast::{Conditional, ConditionalBranch};
 
 impl SyntacticParser {
-    pub(crate) fn parse_conditional(&mut self) -> Result<Statement, Error> {
+    pub(super) fn parse_conditional(&mut self) -> Result<Statement, Error> {
         std::debug_assert!(self.is_keyword(TokenType::If));
         self.advance();
         let if_condition = self.parse_expression()?;

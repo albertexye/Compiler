@@ -2,7 +2,7 @@ use super::*;
 use syntax_ast::{TypeAnnot, TypeModifier, TypeModifierType};
 
 impl SyntacticParser {
-    pub(crate) fn parse_type_annotation(&mut self) -> Result<TypeAnnot, Error> {
+    pub(super) fn parse_type_annotation(&mut self) -> Result<TypeAnnot, Error> {
         let mut modifiers = Vec::new();
         let start = self.peek();
         loop {
@@ -21,9 +21,7 @@ impl SyntacticParser {
                     self.advance();
                 }
                 _ => {
-                    return Err(
-                        self.error(ErrorType::TypeAnnotation, "Expected a type annotation")
-                    );
+                    return Err(self.error(ErrorType::TypeAnnotation, "Expected a type annotation"));
                 }
             }
         }

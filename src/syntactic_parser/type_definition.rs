@@ -41,7 +41,7 @@ use super::*;
 use syntax_ast::{TypeAnnot, TypeDef, TypeDefBody};
 
 impl SyntacticParser {
-    pub(crate) fn parse_type_definition(&mut self) -> Result<TypeDef, Error> {
+    pub(super) fn parse_type_definition(&mut self) -> Result<TypeDef, Error> {
         let token = self.peek().unwrap();
         let TokenValue::Keyword(kw) = token.value else {
             panic!("Type definition starts with a keyword");
