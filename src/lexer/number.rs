@@ -3,7 +3,7 @@ use super::*;
 impl Lexer {
     /// Reads a number token (dispatches to decimal, float, hex, or binary).
     pub(crate) fn read_number(&mut self) -> Result<TokenValue, Error> {
-        let ch = self.peek().unwrap().clone();
+        let ch = *self.peek().unwrap();
         if ch == '0'
             && let Some(&next_ch) = self.input.get(self.index + 1)
         {
@@ -30,7 +30,7 @@ impl Lexer {
     }
 
     fn consume_negative_sign(&mut self) -> bool {
-        if self.peek().unwrap().clone() == '-' {
+        if *self.peek().unwrap() == '-' {
             self.advance();
             true
         } else {

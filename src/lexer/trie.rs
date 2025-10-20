@@ -114,7 +114,7 @@ pub(crate) fn search_token(word: &[char]) -> Option<TokenType> {
     node.keyword
 }
 
-pub(crate) static KEYWORD_TREE: LazyLock<TokenTypeNode> = LazyLock::new(|| build_token_type_tree());
+pub(crate) static KEYWORD_TREE: LazyLock<TokenTypeNode> = LazyLock::new(build_token_type_tree);
 
 impl std::fmt::Display for TokenType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
