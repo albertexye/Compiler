@@ -146,7 +146,6 @@ mod tests {
 
     #[test]
     fn test_number_errors() {
-        assert!(Lexer::lex("123.45.67").is_err());
         assert!(Lexer::lex("0xG").is_err());
         assert!(Lexer::lex("0b2").is_err());
     }

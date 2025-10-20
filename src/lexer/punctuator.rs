@@ -22,6 +22,7 @@ impl Lexer {
         }
         if let Some(kw) = keyword {
             self.index += kw_i + 1;
+            self.column += kw_i + 1;
             Ok(TokenValue::Keyword(kw))
         } else {
             Err(self.error(
