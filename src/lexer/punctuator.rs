@@ -1,7 +1,7 @@
 use super::*;
 
 impl Lexer {
-    pub(crate) fn read_punctuator(&mut self) -> Result<TokenValue, Error> {
+    pub(super) fn read_punctuator(&mut self) -> Result<TokenValue, Error> {
         let mut node = &*trie::KEYWORD_TREE;
         let mut keyword = None;
         let mut kw_i = 0usize;

@@ -1,7 +1,7 @@
 use super::*;
 
 impl Lexer {
-    pub(crate) fn new(input: &str) -> Self {
+    pub(super) fn new(input: &str) -> Self {
         Lexer {
             input: input.chars().collect(),
             index: 0,
@@ -12,13 +12,13 @@ impl Lexer {
             start_column: 1,
         }
     }
-    pub(crate) fn start_token(&mut self) {
+    fn start_token(&mut self) {
         self.start_index = self.index;
         self.start_line = self.line;
         self.start_column = self.column;
     }
 
-    pub(crate) fn end_token(&self) -> TokenSpan {
+    fn end_token(&self) -> TokenSpan {
         TokenSpan {
             line: self.start_line,
             column: self.start_column,
@@ -27,15 +27,15 @@ impl Lexer {
         }
     }
 
-    pub(crate) fn peek(&self) -> Option<&char> {
+    pub(super) fn peek(&self) -> Option<&char> {
         self.input.get(self.index)
     }
 
-    pub(crate) fn peek2(&self) -> Option<&char> {
+    pub(super) fn peek2(&self) -> Option<&char> {
         self.input.get(self.index + 1)
     }
 
-    pub(crate) fn next_token(&mut self) -> Result<Option<Token>, Error> {
+    pub(super) fn next_token(&mut self) -> Result<Option<Token>, Error> {
         self.skip_whitespace_and_comments();
         self.start_token();
         if self.peek().is_none() {
@@ -49,7 +49,7 @@ impl Lexer {
     }
 
     /// Returns the next token from the input, or None if at end.
-    pub(crate) fn next_token_value(&mut self) -> Result<TokenValue, Error> {
+    fn next_token_value(&mut self) -> Result<TokenValue, Error> {
         let ch = *self.peek().unwrap();
         if ch.is_alphabetic() || ch == '_' {
             return Ok(self.read_identifier());
@@ -76,7 +76,7 @@ impl Lexer {
         ))
     }
 
-    pub(crate) fn error(&self, error_type: ErrorType, message: String) -> Error {
+    pub(super) fn error(&self, error_type: ErrorType, message: String) -> Error {
         Error {
             error_type,
             span: self.end_token(),
@@ -84,7 +84,7 @@ impl Lexer {
         }
     }
 
-    pub(crate) fn advance(&mut self) {
+    pub(super) fn advance(&mut self) {
         if let Some(&ch) = self.peek() {
             self.index += 1;
             if ch == '\n' {

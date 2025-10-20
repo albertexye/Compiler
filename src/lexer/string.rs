@@ -2,7 +2,7 @@ use super::*;
 
 impl Lexer {
     /// Reads a string literal token.
-    pub(crate) fn read_string(&mut self) -> Result<TokenValue, Error> {
+    pub(super) fn read_string(&mut self) -> Result<TokenValue, Error> {
         debug_assert_eq!(self.peek(), Some(&'"'));
         self.advance(); // skip opening quote
         let mut string_content = String::new();

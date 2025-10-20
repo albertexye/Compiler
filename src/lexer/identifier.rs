@@ -1,7 +1,7 @@
 use super::*;
 
 impl Lexer {
-    pub(crate) fn read_identifier(&mut self) -> TokenValue {
+    pub(super) fn read_identifier(&mut self) -> TokenValue {
         let mut id = Vec::new();
         while let Some(&ch) = self.peek()
             && (ch.is_alphanumeric() || ch == '_')

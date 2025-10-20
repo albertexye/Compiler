@@ -1,7 +1,7 @@
 use super::*;
 
 impl Lexer {
-    pub(crate) fn skip_whitespace_and_comments(&mut self) {
+    pub(super) fn skip_whitespace_and_comments(&mut self) {
         while self.skip_whitespace() || self.skip_comment() {}
     }
 

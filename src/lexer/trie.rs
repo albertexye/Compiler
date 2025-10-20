@@ -84,7 +84,7 @@ const _: () = std::assert!(
 );
 
 #[derive(Default, Debug)]
-pub(crate) struct TokenTypeNode {
+pub(super) struct TokenTypeNode {
     pub(crate) character: char,
     pub(crate) keyword: Option<TokenType>,
     pub(crate) children: HashMap<char, TokenTypeNode>,
@@ -102,7 +102,7 @@ fn build_token_type_tree() -> TokenTypeNode {
     root
 }
 
-pub(crate) fn search_token(word: &[char]) -> Option<TokenType> {
+pub(super) fn search_token(word: &[char]) -> Option<TokenType> {
     let mut node = &*KEYWORD_TREE;
     for ch in word {
         if let Some(next) = node.children.get(ch) {
@@ -114,7 +114,7 @@ pub(crate) fn search_token(word: &[char]) -> Option<TokenType> {
     node.keyword
 }
 
-pub(crate) static KEYWORD_TREE: LazyLock<TokenTypeNode> = LazyLock::new(build_token_type_tree);
+pub(super) static KEYWORD_TREE: LazyLock<TokenTypeNode> = LazyLock::new(build_token_type_tree);
 
 impl std::fmt::Display for TokenType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
