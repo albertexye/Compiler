@@ -58,3 +58,41 @@ impl SyntacticParser {
         parser.parse_file(filename, module_name)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::lexer::Lexer;
+    use crate::syntax_ast::File;
+
+    fn parse_test_file(code: &str, filename: &str, module_name: &str) -> File {
+        let tokens = Lexer::lex(code).unwrap();
+        SyntacticParser::parse(tokens, filename, module_name).unwrap()
+    }
+
+    #[test]
+    fn test_basic() {
+        let code = r#"module test_add;
+
+import std;
+
+prv fn add(a: i32, b: i32) -> i32 {
+    let ret: i32 = a + b;
+    return ret;
+}
+
+pub fn test() -> bool {
+    let expected: i32 = 25;
+    let result: i32 = add(30, -5);
+    if result == expected {
+        std::print("Passed!\n");
+        return true;
+    } else {
+        std::print("Failed!\n");
+        return false;
+    }
+}"#;
+        let ast = parse_test_file(code, "test", "test_add");
+        insta::assert_yaml_snapshot!(ast);
+    }
+}
