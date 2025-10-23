@@ -59,17 +59,14 @@ impl Lexer {
         if ch.is_ascii_digit() {
             return self.read_number();
         }
-        Err(self.error(
-            ErrorType::UnknownCharacter,
-            format!("Unrecognized character: {}", ch),
-        ))
+        Err(self.error(ErrorType::UnknownCharacter, "Unrecognized character"))
     }
 
-    pub(super) fn error(&self, error_type: ErrorType, message: String) -> Error {
+    pub(super) fn error(&self, typ: ErrorType, msg: &'static str) -> Error {
         Error {
-            error_type,
+            typ,
             span: self.end_token(),
-            message,
+            msg,
         }
     }
 

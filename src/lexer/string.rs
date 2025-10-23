@@ -14,46 +14,28 @@ impl Lexer {
             }
             if ch == '"' {
                 self.advance();
-                return Ok(self.make_string(string_content));
+                return Ok(TokenValue::Literal(Literal::String(string_content)));
             }
             if ch == '\n' {
-                return Err(self.unclosed_string_error());
+                break;
             }
             if ch.is_control() {
-                return Err(self.control_char_in_string_error(ch));
+                return Err(self.error(
+                    ErrorType::InvalidEscapeSequence,
+                    "Control character in string literal",
+                ));
             }
             string_content.push(ch);
             self.advance();
         }
-        Err(self.unclosed_string_error())
-    }
-
-    fn make_string(&self, content: String) -> TokenValue {
-        TokenValue::Literal(Literal::String(content))
-    }
-
-    fn unclosed_string_error(&self) -> Error {
-        self.error(
-            ErrorType::UnclosedString,
-            "Unclosed string literal".to_string(),
-        )
-    }
-
-    fn control_char_in_string_error(&self, ch: char) -> Error {
-        self.error(
-            ErrorType::InvalidEscapeSequence,
-            format!("Control character in string literal: {}", ch),
-        )
+        Err(self.error(ErrorType::UnclosedString, "Unclosed string literal"))
     }
 
     fn read_escape_sequence(&mut self) -> Result<char, Error> {
         let ch = match self.peek() {
             Some(&ch) => ch,
             None => {
-                return Err(self.error(
-                    ErrorType::InvalidEscapeSequence,
-                    "No character after \\".to_string(),
-                ));
+                return Err(self.error(ErrorType::InvalidEscapeSequence, "No character after `\\`"));
             }
         };
         self.advance();
@@ -65,10 +47,7 @@ impl Lexer {
             '"' => Ok('"'),
             'x' => self.read_hexidecimal_escape_sequence(),
             'u' => self.read_unicode_escape_sequence(),
-            _ => Err(self.error(
-                ErrorType::InvalidEscapeSequence,
-                format!("Invalid escape sequence: \\{}", ch),
-            )),
+            _ => Err(self.error(ErrorType::InvalidEscapeSequence, "Invalid escape sequence")),
         }
     }
 
@@ -84,23 +63,20 @@ impl Lexer {
             } else {
                 Err(self.error(
                     ErrorType::InvalidEscapeSequence,
-                    format!("Invalid hex escape sequence: \\x{}", hex_str),
+                    "Invalid hex escape sequence",
                 ))
             }
         } else {
             Err(self.error(
                 ErrorType::InvalidEscapeSequence,
-                "Incomplete hex escape sequence".to_string(),
+                "Incomplete hex escape sequence",
             ))
         }
     }
 
     fn read_unicode_escape_sequence(&mut self) -> Result<char, Error> {
         if self.peek() != Some(&'{') {
-            return Err(self.error(
-                ErrorType::InvalidEscapeSequence,
-                "Expected '{' after \\u".to_string(),
-            ));
+            return Err(self.error(ErrorType::InvalidEscapeSequence, "Expected '{' after \\u"));
         }
         self.advance();
         while let Some(&ch) = self.peek() {
@@ -110,7 +86,7 @@ impl Lexer {
             if !ch.is_ascii_hexdigit() {
                 return Err(self.error(
                     ErrorType::InvalidEscapeSequence,
-                    format!("Invalid character in Unicode escape: {}", ch),
+                    "Invalid character in Unicode escape",
                 ));
             }
             self.advance();
@@ -118,7 +94,7 @@ impl Lexer {
         if self.peek() != Some(&'}') {
             return Err(self.error(
                 ErrorType::InvalidEscapeSequence,
-                "Unclosed Unicode escape sequence".to_string(),
+                "Unclosed Unicode escape sequence",
             ));
         }
         let hex_str: String = self.input[self.start_index + 2..self.index]
@@ -131,13 +107,13 @@ impl Lexer {
             } else {
                 Err(self.error(
                     ErrorType::InvalidEscapeSequence,
-                    format!("Invalid Unicode code point: \\u{{{}}}", hex_str),
+                    "Invalid Unicode code point",
                 ))
             }
         } else {
             Err(self.error(
                 ErrorType::InvalidEscapeSequence,
-                format!("Invalid Unicode escape sequence: \\u{{{}}}", hex_str),
+                "Invalid Unicode escape sequence",
             ))
         }
     }

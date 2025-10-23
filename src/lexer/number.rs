@@ -50,18 +50,12 @@ impl Lexer {
                 .checked_mul(10)
                 .and_then(|n| n.checked_add(ch.to_digit(10).unwrap() as u64))
                 .ok_or_else(|| {
-                    self.error(
-                        ErrorType::InvalidNumber,
-                        "Integer overflow in number".to_string(),
-                    )
+                    self.error(ErrorType::InvalidNumber, "Integer overflow in number")
                 })?;
             self.advance();
         }
         if !found {
-            return Err(self.error(
-                ErrorType::InvalidNumber,
-                "No digits found in number".to_string(),
-            ));
+            return Err(self.error(ErrorType::InvalidNumber, "No digits found in number"));
         }
         Ok(number)
     }
@@ -82,7 +76,7 @@ impl Lexer {
         if !found {
             return Err(self.error(
                 ErrorType::InvalidNumber,
-                "No digits found after decimal point".to_string(),
+                "No digits found after decimal point",
             ));
         }
         Ok(fraction)
@@ -93,7 +87,7 @@ impl Lexer {
             if number - 1 > i64::MAX as u64 {
                 Err(self.error(
                     ErrorType::InvalidNumber,
-                    "Integer overflow in negative number".to_string(),
+                    "Integer overflow in negative number",
                 ))
             } else {
                 Ok(TokenValue::Literal(Literal::Int(-(number as i64))))
@@ -118,16 +112,13 @@ impl Lexer {
         if hex_str.is_empty() {
             return Err(self.error(
                 ErrorType::InvalidNumber,
-                "No digits found in hexadecimal number".to_string(),
+                "No digits found in hexadecimal number",
             ));
         }
         if let Ok(value) = u64::from_str_radix(&hex_str, 16) {
             Ok(TokenValue::Literal(Literal::UInt(value)))
         } else {
-            Err(self.error(
-                ErrorType::InvalidNumber,
-                format!("Invalid hexadecimal number: 0x{}", hex_str),
-            ))
+            Err(self.error(ErrorType::InvalidNumber, "Invalid hexadecimal number"))
         }
     }
 
@@ -144,18 +135,12 @@ impl Lexer {
             }
         }
         if bin_str.is_empty() {
-            return Err(self.error(
-                ErrorType::InvalidNumber,
-                "No digits found in binary number".to_string(),
-            ));
+            return Err(self.error(ErrorType::InvalidNumber, "No digits found in binary number"));
         }
         if let Ok(value) = u64::from_str_radix(&bin_str, 2) {
             Ok(TokenValue::Literal(Literal::UInt(value)))
         } else {
-            Err(self.error(
-                ErrorType::InvalidNumber,
-                format!("Invalid binary number: 0b{}", bin_str),
-            ))
+            Err(self.error(ErrorType::InvalidNumber, "Invalid binary number"))
         }
     }
 }

@@ -31,9 +31,9 @@ pub(crate) enum ErrorType {
 
 #[derive(Debug, PartialEq, Clone)]
 pub(crate) struct Error {
-    error_type: ErrorType,
+    typ: ErrorType,
     span: TokenSpan,
-    message: String,
+    msg: &'static str,
 }
 
 impl Lexer {
@@ -52,6 +52,12 @@ impl Lexer {
 
     pub(crate) fn lex(&mut self, input: &str) -> Result<Vec<Token>, Error> {
         self.input = input.chars().collect();
+        self.index = 0;
+        self.line = 1;
+        self.column = 1;
+        self.start_index = 0;
+        self.start_line = 1;
+        self.start_column = 1;
         let mut tokens = Vec::new();
         while let Some(token) = self.next_token()? {
             tokens.push(token);

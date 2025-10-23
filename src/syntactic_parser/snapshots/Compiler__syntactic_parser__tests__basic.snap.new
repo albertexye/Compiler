@@ -1,0 +1,316 @@
+---
+source: src/syntactic_parser/mod.rs
+assertion_line: 120
+expression: ast
+---
+name: 71
+module: 64
+imports:
+  - 65
+globals: {}
+functions:
+  66:
+    visibility: Private
+    value:
+      name: 66
+      arguments:
+        - name: 67
+          typ:
+            base:
+              - 68
+            modifiers: []
+            span:
+              line: 5
+              column: 15
+              index: 45
+              size: 3
+          span:
+            line: 5
+            column: 15
+            index: 45
+            size: 6
+        - name: 69
+          typ:
+            base:
+              - 68
+            modifiers: []
+            span:
+              line: 5
+              column: 23
+              index: 53
+              size: 3
+          span:
+            line: 5
+            column: 23
+            index: 53
+            size: 6
+      return_type:
+        base:
+          - 68
+        modifiers: []
+        span:
+          line: 5
+          column: 31
+          index: 61
+          size: 3
+      body:
+        - Declaration:
+            name: 70
+            mutable: false
+            typ:
+              base:
+                - 68
+              modifiers: []
+              span:
+                line: 6
+                column: 14
+                index: 80
+                size: 3
+            value:
+              value:
+                Binary:
+                  left:
+                    value:
+                      Identifier:
+                        - 67
+                    span:
+                      line: 6
+                      column: 20
+                      index: 86
+                      size: 1
+                  right:
+                    value:
+                      Identifier:
+                        - 69
+                    span:
+                      line: 6
+                      column: 24
+                      index: 90
+                      size: 1
+                  op: Plus
+              span:
+                line: 6
+                column: 24
+                index: 90
+                size: 3
+            span:
+              line: 6
+              column: 25
+              index: 91
+              size: 21
+        - Return:
+            value:
+              Identifier:
+                - 70
+            span:
+              line: 7
+              column: 12
+              index: 104
+              size: 3
+      span:
+        line: 5
+        column: 8
+        index: 38
+        size: 3
+  71:
+    visibility: Public
+    value:
+      name: 71
+      arguments: []
+      return_type:
+        base:
+          - 72
+        modifiers: []
+        span:
+          line: 10
+          column: 18
+          index: 129
+          size: 4
+      body:
+        - Declaration:
+            name: 73
+            mutable: false
+            typ:
+              base:
+                - 68
+              modifiers: []
+              span:
+                line: 11
+                column: 19
+                index: 154
+                size: 3
+            value:
+              value:
+                Literal:
+                  UInt: 25
+              span:
+                line: 11
+                column: 25
+                index: 160
+                size: 2
+            span:
+              line: 11
+              column: 27
+              index: 162
+              size: 23
+        - Declaration:
+            name: 74
+            mutable: false
+            typ:
+              base:
+                - 68
+              modifiers: []
+              span:
+                line: 12
+                column: 17
+                index: 180
+                size: 3
+            value:
+              value:
+                Call:
+                  function:
+                    value:
+                      Identifier:
+                        - 66
+                    span:
+                      line: 12
+                      column: 23
+                      index: 186
+                      size: 3
+                  args:
+                    - value:
+                        Literal:
+                          UInt: 30
+                      span:
+                        line: 12
+                        column: 27
+                        index: 190
+                        size: 2
+                    - value:
+                        Literal:
+                          Int: -5
+                      span:
+                        line: 12
+                        column: 31
+                        index: 194
+                        size: 2
+              span:
+                line: 12
+                column: 33
+                index: 196
+                size: 8
+            span:
+              line: 12
+              column: 34
+              index: 197
+              size: 30
+        - Conditional:
+            if_branch:
+              condition:
+                value:
+                  Binary:
+                    left:
+                      value:
+                        Identifier:
+                          - 74
+                      span:
+                        line: 13
+                        column: 9
+                        index: 207
+                        size: 6
+                    right:
+                      value:
+                        Identifier:
+                          - 73
+                      span:
+                        line: 13
+                        column: 19
+                        index: 217
+                        size: 8
+                    op: Eq
+                span:
+                  line: 13
+                  column: 19
+                  index: 217
+                  size: 11
+              body:
+                - Expression:
+                    value:
+                      Call:
+                        function:
+                          value:
+                            Identifier:
+                              - 65
+                              - 75
+                          span:
+                            line: 14
+                            column: 14
+                            index: 242
+                            size: 10
+                        args:
+                          - value:
+                              Literal:
+                                String: "Passed!\n"
+                            span:
+                              line: 14
+                              column: 20
+                              index: 248
+                              size: 11
+                    span:
+                      line: 14
+                      column: 31
+                      index: 259
+                      size: 13
+                - Return:
+                    value:
+                      Identifier:
+                        - 76
+                    span:
+                      line: 15
+                      column: 16
+                      index: 277
+                      size: 4
+            elif_branches: []
+            else_branch:
+              - Expression:
+                  value:
+                    Call:
+                      function:
+                        value:
+                          Identifier:
+                            - 65
+                            - 75
+                        span:
+                          line: 17
+                          column: 14
+                          index: 309
+                          size: 10
+                      args:
+                        - value:
+                            Literal:
+                              String: "Failed!\n"
+                          span:
+                            line: 17
+                            column: 20
+                            index: 315
+                            size: 11
+                  span:
+                    line: 17
+                    column: 31
+                    index: 326
+                    size: 13
+              - Return:
+                  value:
+                    Identifier:
+                      - 77
+                  span:
+                    line: 18
+                    column: 16
+                    index: 344
+                    size: 5
+      span:
+        line: 10
+        column: 8
+        index: 119
+        size: 4
+types: {}

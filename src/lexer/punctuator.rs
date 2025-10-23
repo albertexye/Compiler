@@ -26,10 +26,7 @@ impl Lexer {
             self.column += kw_i + 1;
             Ok(TokenValue::Keyword(kw))
         } else {
-            Err(self.error(
-                ErrorType::UnknownCharacter,
-                "Unknown punctuator".to_string(),
-            ))
+            Err(self.error(ErrorType::UnknownCharacter, "Unknown punctuator"))
         }
     }
 }
