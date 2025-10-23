@@ -31,6 +31,7 @@ pub(crate) enum ErrorType {
     Conditional,
     Function,
     Match,
+    Loop,
 }
 
 #[derive(Debug)]
@@ -64,6 +65,7 @@ mod tests {
     use super::*;
     use crate::lexer::Lexer;
     use crate::syntax_ast::File;
+    use insta;
 
     fn parse_test_file(code: &str, filename: &str, module_name: &str) -> File {
         let tokens = Lexer::lex(code).unwrap();
@@ -84,7 +86,7 @@ prv fn add(a: i32, b: i32) -> i32 {
 pub fn test() -> bool {
     let expected: i32 = 25;
     let result: i32 = add(30, -5);
-    if result == expected {
+    if (result == expected) {
         std::print("Passed!\n");
         return true;
     } else {
@@ -93,6 +95,11 @@ pub fn test() -> bool {
     }
 }"#;
         let ast = parse_test_file(code, "test", "test_add");
-        insta::assert_yaml_snapshot!(ast);
+
+        let mut settings = insta::Settings::clone_current();
+        settings.set_sort_maps(true);
+        settings.bind(|| {
+            insta::assert_yaml_snapshot!(ast);
+        });
     }
 }

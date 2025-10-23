@@ -5,7 +5,7 @@ impl SyntacticParser {
     pub(super) fn parse_conditional(&mut self) -> Result<Statement, Error> {
         std::debug_assert!(self.is_keyword(TokenType::If));
         self.advance();
-        let if_condition = self.parse_expression()?;
+        let if_condition = self.parse_paren_exp()?;
         let if_block = self.parse_block()?;
         let if_branch = ConditionalBranch {
             condition: if_condition,
@@ -17,7 +17,7 @@ impl SyntacticParser {
             self.advance();
             if self.is_keyword(TokenType::If) {
                 self.advance();
-                let elif_condition = self.parse_expression()?;
+                let elif_condition = self.parse_paren_exp()?;
                 let elif_block = self.parse_block()?;
                 elif_branches.push(ConditionalBranch {
                     condition: elif_condition,

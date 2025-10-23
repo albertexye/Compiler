@@ -10,6 +10,12 @@ impl SyntacticParser {
         self.pratt_parse(0)
     }
 
+    pub(super) fn parse_paren_exp(&mut self) -> Result<Expression, Error> {
+        self.expect_keyword(TokenType::OpenParen, ErrorType::Expression, "Expected `(`")?;
+        self.advance();
+        self.parse_paren()
+    }
+
     fn parse_paren(&mut self) -> Result<Expression, Error> {
         let exp = self.pratt_parse(0)?;
         if !self.is_keyword(TokenType::CloseParen) {
@@ -101,7 +107,7 @@ impl SyntacticParser {
         Ok(match token.value {
             TokenValue::Identifier(_) => Expression {
                 value: ExpressionValue::Identifier(self.parse_name()?),
-                span: start - self.back().span,
+                span: self.back().span - start,
             },
             TokenValue::Literal(literal) => {
                 self.advance();
@@ -112,7 +118,7 @@ impl SyntacticParser {
                         token::Literal::Float(float) => syntax_ast::Literal::Float(float),
                         token::Literal::String(string) => syntax_ast::Literal::String(string),
                     }),
-                    span: start - self.back().span,
+                    span: self.back().span - start,
                 }
             }
             TokenValue::Keyword(punc) => {
@@ -134,7 +140,8 @@ impl SyntacticParser {
     }
 
     fn parse_postfix(&mut self, punc: TokenType, left: Expression) -> Result<Expression, Error> {
-        let start = self.back().span;
+        let start = self.peek().unwrap().span;
+        self.advance();
         let ev = match punc {
             TokenType::OpenParen => ExpressionValue::Call(Call {
                 function: Box::new(left),
@@ -171,7 +178,6 @@ impl SyntacticParser {
                 return Ok(exp);
             };
             let start = token.span;
-            self.advance();
             let TokenValue::Keyword(punc) = token.value else {
                 return Err(self.error(ErrorType::Expression, "Expected an operator"));
             };

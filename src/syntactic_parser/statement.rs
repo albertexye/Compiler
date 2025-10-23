@@ -4,7 +4,7 @@ impl SyntacticParser {
     pub(super) fn parse_statement(&mut self) -> Result<Statement, Error> {
         let token = self.expect_token(ErrorType::Statement, "Expected statement")?;
         let TokenValue::Keyword(kw) = token.value else {
-            return self.parse_assignment_or_expression();
+            return self.parse_assignment_or_expression(true);
         };
         match kw {
             TokenType::If => self.parse_conditional(),

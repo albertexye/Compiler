@@ -102,6 +102,7 @@ impl SyntacticParser {
             "Keyword `module` must be followed by a valid identifier",
         ))?;
         self.advance();
+        self.end_line()?;
         Ok(name)
     }
 

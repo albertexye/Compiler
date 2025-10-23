@@ -15,6 +15,8 @@ impl SyntacticParser {
     fn parse_for(&mut self) -> Result<Loop, Error> {
         std::debug_assert!(self.is_keyword(TokenType::For));
         self.advance();
+        self.expect_keyword(TokenType::OpenParen, ErrorType::Loop, "Expected `(`")?;
+        self.advance();
         let initialization = if self.is_keyword(TokenType::Semicolon) {
             self.advance();
             None
@@ -22,19 +24,21 @@ impl SyntacticParser {
             Some(self.parse_declaration()?)
         };
         let condition = if self.is_keyword(TokenType::Semicolon) {
-            self.advance();
             None
         } else {
             Some(self.parse_expression()?)
         };
+        self.expect_keyword(TokenType::Semicolon, ErrorType::Loop, "Expected `;`")?;
+        self.advance();
         let mut update = Vec::new();
         if !self.is_keyword(TokenType::OpenBracket) {
-            update.push(self.parse_assignment_or_expression()?);
+            update.push(self.parse_assignment_or_expression(false)?);
             while self.is_keyword(TokenType::Comma) {
                 self.advance();
-                update.push(self.parse_assignment_or_expression()?);
+                update.push(self.parse_assignment_or_expression(false)?);
             }
         }
+        self.advance();
         let body = self.parse_block()?;
         Ok(Loop {
             init: initialization,

@@ -13,7 +13,7 @@ impl SyntacticParser {
         }
         self.advance();
         let type_annotation = self.parse_type_annotation()?;
-        if !self.is_keyword(TokenType::Eq) {
+        if !self.is_keyword(TokenType::Assign) {
             return Err(self.error(ErrorType::Declaration, "Variable must be initialized"));
         }
         self.advance();
