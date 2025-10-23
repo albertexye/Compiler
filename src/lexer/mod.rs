@@ -5,10 +5,8 @@ mod number;
 mod punctuator;
 mod skip;
 mod string;
-mod trie;
 mod utils;
 
-#[derive(Debug, PartialEq, Clone)]
 pub(crate) struct Lexer {
     input: Vec<char>,
 
@@ -19,6 +17,8 @@ pub(crate) struct Lexer {
     start_index: usize,
     start_line: usize,
     start_column: usize,
+
+    pub(crate) symbol_table: SymbolTable,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -37,12 +37,26 @@ pub(crate) struct Error {
 }
 
 impl Lexer {
-    pub(crate) fn lex(input: &str) -> Result<Vec<Token>, Error> {
-        let mut lexer = Lexer::new(input);
+    pub(crate) fn new() -> Self {
+        Lexer {
+            input: Vec::new(),
+            index: 0,
+            line: 1,
+            column: 1,
+            start_index: 0,
+            start_line: 1,
+            start_column: 1,
+            symbol_table: SymbolTable::new(),
+        }
+    }
+
+    pub(crate) fn lex(&mut self, input: &str) -> Result<Vec<Token>, Error> {
+        self.input = input.chars().collect();
         let mut tokens = Vec::new();
-        while let Some(token) = lexer.next_token()? {
+        while let Some(token) = self.next_token()? {
             tokens.push(token);
         }
+        self.input = Vec::new();
         Ok(tokens)
     }
 }
@@ -64,7 +78,8 @@ mod tests {
 
     // Helper function to compare lexed tokens with expected tokens, including spans.
     fn assert_lexes(input: &str, expected: Vec<Token>) {
-        let tokens = Lexer::lex(input).unwrap();
+        let mut lexer = Lexer::new();
+        let tokens = lexer.lex(input).unwrap();
         assert_eq!(tokens, expected);
     }
 
@@ -146,8 +161,9 @@ mod tests {
 
     #[test]
     fn test_number_errors() {
-        assert!(Lexer::lex("0xG").is_err());
-        assert!(Lexer::lex("0b2").is_err());
+        let mut lexer = Lexer::new();
+        assert!(lexer.lex("0xG").is_err());
+        assert!(lexer.lex("0b2").is_err());
     }
 
     #[test]
@@ -170,36 +186,37 @@ mod tests {
 
     #[test]
     fn test_unclosed_string() {
-        assert!(Lexer::lex(r#""hello"#).is_err());
+        let mut lexer = Lexer::new();
+        assert!(lexer.lex(r#""hello"#).is_err());
     }
 
     #[test]
     fn test_identifiers_and_keywords() {
-        assert_lexes(
-            "let x = 5;",
-            vec![
-                Token {
-                    value: TokenValue::Keyword(TokenType::Let),
-                    span: span(1, 1, 0, 3),
-                },
-                Token {
-                    value: TokenValue::Identifier("x".to_string()),
-                    span: span(1, 5, 4, 1),
-                },
-                Token {
-                    value: TokenValue::Keyword(TokenType::Assign),
-                    span: span(1, 7, 6, 1),
-                },
-                Token {
-                    value: TokenValue::Literal(Literal::UInt(5)),
-                    span: span(1, 9, 8, 1),
-                },
-                Token {
-                    value: TokenValue::Keyword(TokenType::Semicolon),
-                    span: span(1, 10, 9, 1),
-                },
-            ],
-        );
+        let mut lexer = Lexer::new();
+        let tokens = lexer.lex("let x = 5;").unwrap();
+        let expected = vec![
+            Token {
+                value: TokenValue::Keyword(TokenType::Let),
+                span: span(1, 1, 0, 3),
+            },
+            Token {
+                value: TokenValue::Identifier(lexer.symbol_table.search("x").unwrap()),
+                span: span(1, 5, 4, 1),
+            },
+            Token {
+                value: TokenValue::Keyword(TokenType::Assign),
+                span: span(1, 7, 6, 1),
+            },
+            Token {
+                value: TokenValue::Literal(Literal::UInt(5)),
+                span: span(1, 9, 8, 1),
+            },
+            Token {
+                value: TokenValue::Keyword(TokenType::Semicolon),
+                span: span(1, 10, 9, 1),
+            },
+        ];
+        assert_eq!(tokens, expected);
     }
 
     #[test]
@@ -229,30 +246,30 @@ mod tests {
 
     #[test]
     fn test_multiline_lexing() {
-        assert_lexes(
-            "let y\n  = 10;",
-            vec![
-                Token {
-                    value: TokenValue::Keyword(TokenType::Let),
-                    span: span(1, 1, 0, 3),
-                },
-                Token {
-                    value: TokenValue::Identifier("y".to_string()),
-                    span: span(1, 5, 4, 1),
-                },
-                Token {
-                    value: TokenValue::Keyword(TokenType::Assign),
-                    span: span(2, 3, 8, 1),
-                },
-                Token {
-                    value: TokenValue::Literal(Literal::UInt(10)),
-                    span: span(2, 5, 10, 2),
-                },
-                Token {
-                    value: TokenValue::Keyword(TokenType::Semicolon),
-                    span: span(2, 7, 12, 1),
-                },
-            ],
-        );
+        let mut lexer = Lexer::new();
+        let tokens = lexer.lex("let y\n  = 10;").unwrap();
+        let expected = vec![
+            Token {
+                value: TokenValue::Keyword(TokenType::Let),
+                span: span(1, 1, 0, 3),
+            },
+            Token {
+                value: TokenValue::Identifier(lexer.symbol_table.search("y").unwrap()),
+                span: span(1, 5, 4, 1),
+            },
+            Token {
+                value: TokenValue::Keyword(TokenType::Assign),
+                span: span(2, 3, 8, 1),
+            },
+            Token {
+                value: TokenValue::Literal(Literal::UInt(10)),
+                span: span(2, 5, 10, 2),
+            },
+            Token {
+                value: TokenValue::Keyword(TokenType::Semicolon),
+                span: span(2, 7, 12, 1),
+            },
+        ];
+        assert_eq!(tokens, expected);
     }
 }

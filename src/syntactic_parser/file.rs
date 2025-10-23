@@ -8,7 +8,7 @@ use syntax_ast::{File, Scope};
 impl SyntacticParser {
     pub(super) fn parse_file(&mut self, filename: &str, module_name: &str) -> Result<File, Error> {
         let module = self.parse_module_declaration()?;
-        if module != module_name {
+        if Some(module) != self.lexer.symbol_table.search(module_name) {
             return Err(self.error(ErrorType::Module, "Incorrect module name"));
         }
         let imports = self.parse_imports()?;
@@ -19,7 +19,7 @@ impl SyntacticParser {
             self.parse_content(&mut types, &mut globals, &mut functions)?;
         }
         Ok(File {
-            name: filename.to_string(),
+            name: self.lexer.symbol_table.insert(filename.to_string()),
             module,
             imports,
             globals,
@@ -30,9 +30,9 @@ impl SyntacticParser {
 
     fn parse_content(
         &mut self,
-        types: &mut HashMap<String, Scope<TypeDef>>,
-        globals: &mut HashMap<String, Scope<Declaration>>,
-        functions: &mut HashMap<String, Scope<Function>>,
+        types: &mut HashMap<SymbolId, Scope<TypeDef>>,
+        globals: &mut HashMap<SymbolId, Scope<Declaration>>,
+        functions: &mut HashMap<SymbolId, Scope<Function>>,
     ) -> Result<(), Error> {
         let visibility = self.parse_visibility()?;
         let token = self.expect_token(ErrorType::Module, "Missing symbol definition")?;
@@ -89,7 +89,7 @@ impl SyntacticParser {
         }
     }
 
-    fn parse_module_declaration(&mut self) -> Result<String, Error> {
+    fn parse_module_declaration(&mut self) -> Result<SymbolId, Error> {
         if !self.is_keyword(TokenType::Module) {
             return Err(self.error(
                 ErrorType::Module,
@@ -106,7 +106,7 @@ impl SyntacticParser {
         Ok(name)
     }
 
-    fn parse_imports(&mut self) -> Result<HashSet<String>, Error> {
+    fn parse_imports(&mut self) -> Result<HashSet<SymbolId>, Error> {
         let mut imports = HashSet::new();
         while self.is_keyword(TokenType::Import) {
             if !imports.insert(self.parse_import()?) {
@@ -116,7 +116,7 @@ impl SyntacticParser {
         Ok(imports)
     }
 
-    fn parse_import(&mut self) -> Result<String, Error> {
+    fn parse_import(&mut self) -> Result<SymbolId, Error> {
         std::debug_assert!(self.is_keyword(TokenType::Import));
         self.advance();
         let name = self.is_identifier().ok_or(self.error(

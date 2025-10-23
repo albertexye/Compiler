@@ -9,10 +9,10 @@ impl SyntacticParser {
         self.tokens[self.index - 1].clone()
     }
 
-    pub(super) fn error(&self, error_type: ErrorType, message: &str) -> Error {
+    pub(super) fn error(&self, typ: ErrorType, msg: &'static str) -> Error {
         Error {
-            typ: error_type,
-            msg: message.to_string(),
+            typ,
+            msg,
             token: self.peek(),
         }
     }
@@ -20,7 +20,7 @@ impl SyntacticParser {
     pub(super) fn expect_token(
         &self,
         error_type: ErrorType,
-        message: &str,
+        message: &'static str,
     ) -> Result<Token, Error> {
         match self.peek() {
             Some(token) => Ok(token),
@@ -31,8 +31,8 @@ impl SyntacticParser {
     pub(super) fn expect_identifier(
         &self,
         error_type: ErrorType,
-        message: &str,
-    ) -> Result<String, Error> {
+        message: &'static str,
+    ) -> Result<SymbolId, Error> {
         let token = match self.peek() {
             Some(token) => token,
             None => return Err(self.error(error_type, message)),
@@ -47,7 +47,7 @@ impl SyntacticParser {
         &self,
         kw: TokenType,
         error_type: ErrorType,
-        message: &str,
+        message: &'static str,
     ) -> Result<(), Error> {
         if !self.is_keyword(kw) {
             Err(self.error(error_type, message))
@@ -79,7 +79,7 @@ impl SyntacticParser {
         }
     }
 
-    pub(super) fn is_identifier(&self) -> Option<String> {
+    pub(super) fn is_identifier(&self) -> Option<SymbolId> {
         let token = self.peek()?;
         match token.value {
             TokenValue::Identifier(id) => Some(id),

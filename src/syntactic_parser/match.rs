@@ -16,7 +16,7 @@ impl SyntacticParser {
         let mut default = None;
         while !self.is_keyword(TokenType::CloseBracket) {
             if let Some(id) = self.is_identifier()
-                && &id == "_"
+                && Some(id) == self.lexer.symbol_table.search("_")
             {
                 if default.is_some() {
                     return Err(self.error(ErrorType::Match, "Multiple default branches"));

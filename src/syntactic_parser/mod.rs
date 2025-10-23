@@ -1,7 +1,8 @@
+use crate::lexer::Lexer;
 use crate::syntax_ast;
 use crate::syntax_ast::{Name, Statement};
 use crate::token;
-use crate::token::{Token, TokenType, TokenValue};
+use crate::token::{SymbolId, Token, TokenType, TokenValue};
 
 mod assignment;
 mod conditional;
@@ -19,7 +20,8 @@ mod utils;
 
 #[derive(Debug)]
 pub(crate) enum ErrorType {
-    Name,
+    Lexer(Box<crate::lexer::Error>),
+    Io(Box<std::io::Error>),
     Module,
     Import,
     LineEnd,
@@ -37,39 +39,55 @@ pub(crate) enum ErrorType {
 #[derive(Debug)]
 pub(crate) struct Error {
     typ: ErrorType,
-    msg: String,
+    msg: &'static str,
     token: Option<Token>,
 }
 
 pub struct SyntacticParser {
+    lexer: Lexer,
     tokens: Vec<Token>,
     index: usize,
 }
 
 impl SyntacticParser {
+    pub(crate) fn new() -> SyntacticParser {
+        SyntacticParser {
+            lexer: Lexer::new(),
+            tokens: Vec::new(),
+            index: 0,
+        }
+    }
+
     pub(crate) fn parse(
-        tokens: Vec<Token>,
+        &mut self,
+        code: &str,
         filename: &str,
         module_name: &str,
     ) -> Result<syntax_ast::File, Error> {
-        let mut parser = SyntacticParser {
-            tokens,
-            index: 0usize,
+        self.tokens = match self.lexer.lex(code) {
+            Ok(tokens) => tokens,
+            Err(err) => {
+                return Err(Error {
+                    typ: ErrorType::Lexer(Box::new(err)),
+                    msg: "Lexer error",
+                    token: None,
+                });
+            }
         };
-        parser.parse_file(filename, module_name)
+        let ret = self.parse_file(filename, module_name);
+        self.tokens = Vec::new();
+        ret
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::lexer::Lexer;
     use crate::syntax_ast::File;
-    use insta;
 
     fn parse_test_file(code: &str, filename: &str, module_name: &str) -> File {
-        let tokens = Lexer::lex(code).unwrap();
-        SyntacticParser::parse(tokens, filename, module_name).unwrap()
+        let mut parser = SyntacticParser::new();
+        parser.parse(code, filename, module_name).unwrap()
     }
 
     #[test]

@@ -56,7 +56,7 @@ impl SyntacticParser {
         })
     }
 
-    fn parse_struct_literal(&mut self) -> Result<HashMap<String, Expression>, Error> {
+    fn parse_struct_literal(&mut self) -> Result<HashMap<SymbolId, Expression>, Error> {
         let mut ret = HashMap::new();
         loop {
             if self.is_keyword(TokenType::CloseBracket) {

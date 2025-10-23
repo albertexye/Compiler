@@ -1,17 +1,6 @@
 use super::*;
 
 impl Lexer {
-    pub(super) fn new(input: &str) -> Self {
-        Lexer {
-            input: input.chars().collect(),
-            index: 0,
-            line: 1,
-            column: 1,
-            start_index: 0,
-            start_line: 1,
-            start_column: 1,
-        }
-    }
     fn start_token(&mut self) {
         self.start_index = self.index;
         self.start_line = self.line;

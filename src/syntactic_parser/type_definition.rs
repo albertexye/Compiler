@@ -71,7 +71,7 @@ impl SyntacticParser {
         })
     }
 
-    fn parse_struct_body(&mut self) -> Result<HashMap<String, TypeAnnot>, Error> {
+    fn parse_struct_body(&mut self) -> Result<HashMap<SymbolId, TypeAnnot>, Error> {
         if !self.is_keyword(TokenType::OpenBracket) {
             return Err(self.error(ErrorType::TypeDefinition, "Expected `{`"));
         }
@@ -80,10 +80,7 @@ impl SyntacticParser {
         while !self.is_keyword(TokenType::CloseBracket) {
             let (name, field_type) = self.parse_struct_field()?;
             if fields.contains_key(&name) {
-                return Err(self.error(
-                    ErrorType::TypeDefinition,
-                    &format!("Duplicated struct field `{}`", name),
-                ));
+                return Err(self.error(ErrorType::TypeDefinition, "Duplicated struct field "));
             }
             fields.insert(name, field_type);
             if !self.is_keyword(TokenType::Comma) {
@@ -94,7 +91,7 @@ impl SyntacticParser {
         Ok(fields)
     }
 
-    fn parse_struct_field(&mut self) -> Result<(String, TypeAnnot), Error> {
+    fn parse_struct_field(&mut self) -> Result<(SymbolId, TypeAnnot), Error> {
         let id = self
             .is_identifier()
             .ok_or(self.error(ErrorType::TypeDefinition, "Expected an identifier"))?;
@@ -126,7 +123,7 @@ impl SyntacticParser {
         })
     }
 
-    fn parse_enum_body(&mut self) -> Result<HashMap<String, u64>, Error> {
+    fn parse_enum_body(&mut self) -> Result<HashMap<SymbolId, u64>, Error> {
         if !self.is_keyword(TokenType::OpenBracket) {
             return Err(self.error(ErrorType::TypeDefinition, "Expected `{`"));
         }
@@ -137,16 +134,10 @@ impl SyntacticParser {
         while !self.is_keyword(TokenType::CloseBracket) {
             let (name, value) = self.parse_enum_field(prev_value)?;
             if fields.contains_key(&name) {
-                return Err(self.error(
-                    ErrorType::TypeDefinition,
-                    &format!("Duplicated enum field `{}`", name),
-                ));
+                return Err(self.error(ErrorType::TypeDefinition, "Duplicated enum field"));
             }
             if values.contains(&value) {
-                return Err(self.error(
-                    ErrorType::TypeDefinition,
-                    &format!("Duplicated enum value `{}`", name),
-                ));
+                return Err(self.error(ErrorType::TypeDefinition, "Duplicated enum value"));
             }
             fields.insert(name, value);
             values.insert(value);
@@ -164,7 +155,7 @@ impl SyntacticParser {
         Ok(fields)
     }
 
-    fn parse_enum_field(&mut self, prev: u64) -> Result<(String, u64), Error> {
+    fn parse_enum_field(&mut self, prev: u64) -> Result<(SymbolId, u64), Error> {
         let id = self
             .is_identifier()
             .ok_or(self.error(ErrorType::TypeDefinition, "Expected an identifier"))?;

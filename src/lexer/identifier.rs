@@ -2,17 +2,19 @@ use super::*;
 
 impl Lexer {
     pub(super) fn read_identifier(&mut self) -> TokenValue {
-        let mut id = Vec::new();
+        let mut identifier = Vec::new();
         while let Some(&ch) = self.peek()
             && (ch.is_alphanumeric() || ch == '_')
         {
-            id.push(ch);
+            identifier.push(ch);
             self.advance();
         }
-        if let Some(kw) = trie::search_token(&id) {
-            TokenValue::Keyword(kw)
+        let identifier = identifier.iter().collect();
+        let id = self.symbol_table.insert(identifier);
+        if SymbolTable::is_keyword(&id) {
+            TokenValue::Keyword(SymbolTable::get_keyword(&id).unwrap())
         } else {
-            TokenValue::Identifier(id.iter().collect())
+            TokenValue::Identifier(id)
         }
     }
 }

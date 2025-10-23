@@ -3,7 +3,7 @@ use std::{
     path::PathBuf,
 };
 
-use crate::token::TokenSpan;
+use crate::token::{SymbolId, TokenSpan};
 use serde::Serialize;
 
 #[derive(Debug, PartialEq, Serialize)]
@@ -15,21 +15,21 @@ pub(crate) struct Ast {
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Module {
     pub(crate) name: String,
-    pub(crate) files: HashMap<String, File>, // filename: file
-    pub(crate) dependencies: HashMap<String, PathBuf>, // import name: module path
+    pub(crate) files: HashMap<SymbolId, File>, // filename: file
+    pub(crate) dependencies: HashMap<SymbolId, PathBuf>, // import name: module path
 }
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct File {
-    pub(crate) name: String,
-    pub(crate) module: String,
-    pub(crate) imports: HashSet<String>,
-    pub(crate) globals: HashMap<String, Scope<Declaration>>,
-    pub(crate) functions: HashMap<String, Scope<Function>>,
-    pub(crate) types: HashMap<String, Scope<TypeDef>>,
+    pub(crate) name: SymbolId,
+    pub(crate) module: SymbolId,
+    pub(crate) imports: HashSet<SymbolId>,
+    pub(crate) globals: HashMap<SymbolId, Scope<Declaration>>,
+    pub(crate) functions: HashMap<SymbolId, Scope<Function>>,
+    pub(crate) types: HashMap<SymbolId, Scope<TypeDef>>,
 }
 
-pub(crate) type Name = Vec<String>;
+pub(crate) type Name = Vec<SymbolId>;
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) enum Visibility {
@@ -46,16 +46,16 @@ pub(crate) struct Scope<T> {
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct TypeDef {
-    pub(crate) name: String,
+    pub(crate) name: SymbolId,
     pub(crate) body: TypeDefBody,
     pub(crate) span: TokenSpan,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) enum TypeDefBody {
-    Struct(HashMap<String, TypeAnnot>),
-    Enum(HashMap<String, u64>),
-    Union(HashMap<String, TypeAnnot>),
+    Struct(HashMap<SymbolId, TypeAnnot>),
+    Enum(HashMap<SymbolId, u64>),
+    Union(HashMap<SymbolId, TypeAnnot>),
     Alias(TypeAnnot),
 }
 
@@ -94,7 +94,7 @@ pub(crate) enum TypeModifierType {
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Function {
-    pub(crate) name: String,
+    pub(crate) name: SymbolId,
     pub(crate) arguments: Vec<FunctionArg>,
     pub(crate) return_type: Option<TypeAnnot>,
     pub(crate) body: Vec<Statement>,
@@ -103,14 +103,14 @@ pub(crate) struct Function {
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct FunctionArg {
-    pub(crate) name: String,
+    pub(crate) name: SymbolId,
     pub(crate) typ: TypeAnnot,
     pub(crate) span: TokenSpan,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Declaration {
-    pub(crate) name: String,
+    pub(crate) name: SymbolId,
     pub(crate) mutable: bool,
     pub(crate) typ: TypeAnnot,
     pub(crate) value: Expression,
@@ -192,7 +192,7 @@ pub(crate) enum Literal {
     Float(f64),
     Bool(bool),
     Array(Vec<Expression>),
-    Struct(HashMap<String, Expression>),
+    Struct(HashMap<SymbolId, Expression>),
 }
 
 #[derive(Debug, PartialEq, Serialize)]
