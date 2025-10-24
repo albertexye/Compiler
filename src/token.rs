@@ -1,6 +1,8 @@
 use serde::Serialize;
 use std::collections::HashMap;
 use std::ops::Sub;
+#[cfg(test)]
+use std::sync::{LazyLock, Mutex};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub(crate) enum TokenType {
@@ -190,19 +192,22 @@ const TOKEN_TYPES_ENUM: [TokenType; 64] = [
 
 const _: () = assert!(TOKEN_TYPES_STR.len() == TOKEN_TYPES_ENUM.len());
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Hash)]
+#[cfg_attr(not(test), derive(Serialize))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(crate) struct SymbolId(usize);
 
 pub(crate) struct SymbolTable {
     counter: SymbolId,
     table: HashMap<String, SymbolId>,
+    reverse: Option<Vec<String>>,
 }
 
 impl SymbolTable {
-    pub(super) fn new() -> SymbolTable {
+    pub(crate) fn new() -> SymbolTable {
         let mut sym_table = SymbolTable {
             counter: SymbolId(0),
             table: HashMap::new(),
+            reverse: None,
         };
         for keyword in TOKEN_TYPES_STR {
             sym_table
@@ -213,7 +218,8 @@ impl SymbolTable {
         sym_table
     }
 
-    pub(super) fn insert(&mut self, token: String) -> SymbolId {
+    pub(crate) fn insert(&mut self, token: String) -> SymbolId {
+        std::debug_assert!(self.reverse.is_none());
         if self.table.contains_key(&token) {
             self.table[&token]
         } else {
@@ -225,6 +231,7 @@ impl SymbolTable {
     }
 
     pub(crate) fn search(&self, token: &str) -> Option<SymbolId> {
+        std::debug_assert!(self.reverse.is_none());
         if self.table.contains_key(token) {
             Some(self.table[token])
         } else {
@@ -232,15 +239,53 @@ impl SymbolTable {
         }
     }
 
-    pub(super) fn is_keyword(id: &SymbolId) -> bool {
-        return id.0 < TOKEN_TYPES_STR.len();
+    pub(crate) fn is_keyword(id: &SymbolId) -> bool {
+        id.0 < TOKEN_TYPES_STR.len()
     }
 
-    pub(super) fn get_keyword(id: &SymbolId) -> Option<TokenType> {
+    pub(crate) fn get_keyword(id: &SymbolId) -> Option<TokenType> {
         if !SymbolTable::is_keyword(id) {
             None
         } else {
             Some(TOKEN_TYPES_ENUM[id.0])
         }
+    }
+
+    pub(crate) fn reverse_lookup(&mut self, id: SymbolId) -> String {
+        let rev = match self.reverse.as_ref() {
+            Some(rev) => rev,
+            None => {
+                let mut reverse = vec![String::new(); self.counter.0];
+                let table = std::mem::take(&mut self.table);
+                for (sym, id) in table.into_iter() {
+                    reverse[id.0] = sym;
+                }
+                self.reverse = Some(reverse);
+                self.reverse.as_ref().unwrap()
+            }
+        };
+        assert!(id.0 < rev.len());
+        rev[id.0].clone()
+    }
+}
+
+#[cfg(test)]
+static SYMBOL_CONTEXT: LazyLock<Mutex<SymbolTable>> =
+    LazyLock::new(|| Mutex::new(SymbolTable::new()));
+
+#[cfg(test)]
+pub(crate) fn set_symbol_context(symbol_table: SymbolTable) {
+    let mut guard = SYMBOL_CONTEXT.lock().unwrap();
+    *guard = symbol_table;
+}
+
+#[cfg(test)]
+impl Serialize for SymbolId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut guard = SYMBOL_CONTEXT.lock().unwrap();
+        serializer.serialize_str(&guard.reverse_lookup(*self))
     }
 }

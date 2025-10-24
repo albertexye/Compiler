@@ -87,7 +87,9 @@ mod tests {
 
     fn parse_test_file(code: &str, filename: &str, module_name: &str) -> File {
         let mut parser = SyntacticParser::new();
-        parser.parse(code, filename, module_name).unwrap()
+        let ret = parser.parse(code, filename, module_name).unwrap();
+        token::set_symbol_context(parser.lexer.symbol_table);
+        ret
     }
 
     #[test]
