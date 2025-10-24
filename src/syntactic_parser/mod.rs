@@ -82,18 +82,19 @@ impl SyntacticParser {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::syntax_ast::File;
 
-    fn parse_test_file(code: &str, filename: &str, module_name: &str) -> File {
+    use super::*;
+
+    fn test_code(code: &str, filename: &str, module_name: &str) -> File {
         let mut parser = SyntacticParser::new();
-        let ret = parser.parse(code, filename, module_name).unwrap();
+        let ast = parser.parse(code, filename, module_name).unwrap();
         token::set_symbol_context(parser.lexer.symbol_table);
-        ret
+        ast
     }
 
     #[test]
-    fn test_basic() {
+    fn basic() {
         let code = r#"module test_add;
 
 import std;
@@ -114,8 +115,28 @@ pub fn test() -> bool {
         return false;
     }
 }"#;
-        let ast = parse_test_file(code, "test", "test_add");
+        let ast = test_code(code, "test", "test_add");
+        let mut settings = insta::Settings::clone_current();
+        settings.set_sort_maps(true);
+        settings.bind(|| {
+            insta::assert_yaml_snapshot!(ast);
+        });
+    }
 
+    #[test]
+    fn loops() {
+        let code = r#"module test_loop;
+
+import std;
+
+prv fn sum(list: []let i32) -> i32 {
+    var ret: i32 = 0;
+    for (var i: i32 = 0; i < list.len; i += 1) {
+        ret += list[i];
+    }
+    return ret;
+}"#;
+        let ast = test_code(code, "test", "test_loop");
         let mut settings = insta::Settings::clone_current();
         settings.set_sort_maps(true);
         settings.bind(|| {

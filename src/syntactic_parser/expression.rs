@@ -153,7 +153,7 @@ impl SyntacticParser {
                     left: Box::new(left),
                     right: Box::new(self.parse_expression()?),
                 });
-                if !self.is_keyword(TokenType::CloseParen) {
+                if !self.is_keyword(TokenType::CloseBrace) {
                     return Err(self.error(ErrorType::Expression, "Expected `]`"));
                 }
                 self.advance();

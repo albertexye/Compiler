@@ -17,8 +17,8 @@ impl SyntacticParser {
                     });
                 }
                 TokenValue::Keyword(kw) => {
-                    modifiers.push(self.parse_type_modifier(kw)?);
                     self.advance();
+                    modifiers.push(self.parse_type_modifier(kw)?);
                 }
                 _ => {
                     return Err(self.error(ErrorType::TypeAnnotation, "Expected a type annotation"));
