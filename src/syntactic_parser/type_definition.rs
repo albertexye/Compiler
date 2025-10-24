@@ -88,6 +88,7 @@ impl SyntacticParser {
             }
             self.advance();
         }
+        self.advance();
         Ok(fields)
     }
 
@@ -130,9 +131,9 @@ impl SyntacticParser {
         self.advance();
         let mut fields = HashMap::new();
         let mut values = HashSet::new();
-        let mut prev_value: u64 = 0;
+        let mut counter: u64 = 0;
         while !self.is_keyword(TokenType::CloseBracket) {
-            let (name, value) = self.parse_enum_field(prev_value)?;
+            let (name, value) = self.parse_enum_field(counter)?;
             if fields.contains_key(&name) {
                 return Err(self.error(ErrorType::TypeDefinition, "Duplicated enum field"));
             }
@@ -141,7 +142,7 @@ impl SyntacticParser {
             }
             fields.insert(name, value);
             values.insert(value);
-            prev_value = value;
+            counter = value + 1;
             if !self.is_keyword(TokenType::Comma) {
                 if self.is_keyword(TokenType::CloseBracket) {
                     break;
@@ -155,19 +156,20 @@ impl SyntacticParser {
         Ok(fields)
     }
 
-    fn parse_enum_field(&mut self, prev: u64) -> Result<(SymbolId, u64), Error> {
+    fn parse_enum_field(&mut self, counter: u64) -> Result<(SymbolId, u64), Error> {
         let id = self
             .is_identifier()
             .ok_or(self.error(ErrorType::TypeDefinition, "Expected an identifier"))?;
         self.advance();
-        if !self.is_keyword(TokenType::Eq) {
-            return Ok((id, prev + 1));
+        if !self.is_keyword(TokenType::Assign) {
+            return Ok((id, counter));
         }
         self.advance();
         let value = self.is_uint().ok_or(self.error(
             ErrorType::TypeDefinition,
             "Expected a positive integer value",
         ))?;
+        self.advance();
         Ok((id, value))
     }
 

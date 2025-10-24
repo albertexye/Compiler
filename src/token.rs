@@ -2,7 +2,10 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::ops::Sub;
 #[cfg(test)]
-use std::sync::{LazyLock, Mutex};
+use std::{
+    cell::RefCell,
+    sync::{LazyLock, Mutex},
+};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub(crate) enum TokenType {
@@ -251,7 +254,7 @@ impl SymbolTable {
         }
     }
 
-    pub(crate) fn reverse_lookup(&mut self, id: SymbolId) -> String {
+    pub(crate) fn reverse_lookup(&mut self, id: SymbolId) -> Option<String> {
         let rev = match self.reverse.as_ref() {
             Some(rev) => rev,
             None => {
@@ -264,19 +267,24 @@ impl SymbolTable {
                 self.reverse.as_ref().unwrap()
             }
         };
-        assert!(id.0 < rev.len());
-        rev[id.0].clone()
+        if id.0 < rev.len() {
+            Some(rev[id.0].clone())
+        } else {
+            None
+        }
     }
 }
 
 #[cfg(test)]
-static SYMBOL_CONTEXT: LazyLock<Mutex<SymbolTable>> =
-    LazyLock::new(|| Mutex::new(SymbolTable::new()));
+thread_local! {
+    static SYMBOL_CONTEXT: RefCell<SymbolTable> = RefCell::new(SymbolTable::new());
+}
 
 #[cfg(test)]
 pub(crate) fn set_symbol_context(symbol_table: SymbolTable) {
-    let mut guard = SYMBOL_CONTEXT.lock().unwrap();
-    *guard = symbol_table;
+    SYMBOL_CONTEXT.with(|c| {
+        *c.borrow_mut() = symbol_table;
+    });
 }
 
 #[cfg(test)]
@@ -285,7 +293,7 @@ impl Serialize for SymbolId {
     where
         S: serde::Serializer,
     {
-        let mut guard = SYMBOL_CONTEXT.lock().unwrap();
-        serializer.serialize_str(&guard.reverse_lookup(*self))
+        let token = SYMBOL_CONTEXT.with(|c| c.borrow_mut().reverse_lookup(*self));
+        serializer.serialize_str(&token.unwrap())
     }
 }

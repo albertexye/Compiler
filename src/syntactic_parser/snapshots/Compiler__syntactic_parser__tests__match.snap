@@ -1,0 +1,123 @@
+---
+source: src/syntactic_parser/mod.rs
+expression: ast
+---
+name: test
+module: test_match
+imports:
+  - std
+globals: {}
+functions:
+  is_true:
+    visibility: Public
+    value:
+      name: is_true
+      arguments:
+        - name: cond
+          typ:
+            base:
+              - bool
+            modifiers: []
+            span:
+              line: 5
+              column: 22
+              index: 54
+              size: 4
+          span:
+            line: 5
+            column: 22
+            index: 54
+            size: 10
+      return_type:
+        base:
+          - bool
+        modifiers: []
+        span:
+          line: 5
+          column: 31
+          index: 63
+          size: 4
+      body:
+        - Match:
+            value:
+              value:
+                Identifier:
+                  - cond
+              span:
+                line: 6
+                column: 12
+                index: 81
+                size: 4
+            cases:
+              - condition:
+                  value:
+                    Identifier:
+                      - "true"
+                  span:
+                    line: 7
+                    column: 9
+                    index: 97
+                    size: 4
+                body:
+                  - Return:
+                      value:
+                        Identifier:
+                          - "true"
+                      span:
+                        line: 7
+                        column: 26
+                        index: 114
+                        size: 4
+              - condition:
+                  value:
+                    Identifier:
+                      - "false"
+                  span:
+                    line: 8
+                    column: 9
+                    index: 130
+                    size: 5
+                body:
+                  - Return:
+                      value:
+                        Identifier:
+                          - "false"
+                      span:
+                        line: 8
+                        column: 27
+                        index: 148
+                        size: 5
+            default:
+              - Expression:
+                  value:
+                    Call:
+                      function:
+                        value:
+                          Identifier:
+                            - std
+                            - print
+                        span:
+                          line: 9
+                          column: 21
+                          index: 177
+                          size: 10
+                      args:
+                        - value:
+                            Literal:
+                              String: Never happends
+                          span:
+                            line: 9
+                            column: 27
+                            index: 183
+                            size: 16
+                  span:
+                    line: 9
+                    column: 43
+                    index: 199
+                    size: 18
+      span:
+        line: 5
+        column: 8
+        index: 40
+        size: 7
+types: {}

@@ -5,7 +5,15 @@ impl SyntacticParser {
     pub(super) fn parse_match(&mut self) -> Result<Statement, Error> {
         std::debug_assert!(self.is_keyword(TokenType::Match));
         self.advance();
+        self.expect_keyword(
+            TokenType::OpenParen,
+            ErrorType::Match,
+            "Expected match value",
+        )?;
+        self.advance();
         let value = self.parse_expression()?;
+        self.expect_keyword(TokenType::CloseParen, ErrorType::Match, "Expected `)`")?;
+        self.advance();
         self.expect_keyword(
             TokenType::OpenBracket,
             ErrorType::Match,

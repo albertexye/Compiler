@@ -52,7 +52,12 @@ impl SyntacticParser {
         std::debug_assert!(self.is_keyword(TokenType::While));
         self.advance();
         let condition = if !self.is_keyword(TokenType::OpenBracket) {
-            Some(self.parse_expression()?)
+            self.expect_keyword(TokenType::OpenParen, ErrorType::Loop, "Expected `(`")?;
+            self.advance();
+            let exp = self.parse_expression()?;
+            self.expect_keyword(TokenType::CloseParen, ErrorType::Loop, "Expected `)`")?;
+            self.advance();
+            Some(exp)
         } else {
             None
         };

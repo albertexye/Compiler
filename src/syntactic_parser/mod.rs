@@ -129,14 +129,79 @@ pub fn test() -> bool {
 
 import std;
 
+pub fn count_bits(n: u32) -> u8 {
+    var num: u32 = n;
+    var count: u8 = 0;
+    while (num > 0) {
+        count += u8(num & 0b1);
+        num >>= 1;
+    }
+    return count;
+}
+
 prv fn sum(list: []let i32) -> i32 {
     var ret: i32 = 0;
     for (var i: i32 = 0; i < list.len; i += 1) {
         ret += list[i];
     }
     return ret;
+}
+
+pub fn dead_loop() {
+    while {
+        std::print("Hello");
+    }
 }"#;
         let ast = test_code(code, "test", "test_loop");
+        let mut settings = insta::Settings::clone_current();
+        settings.set_sort_maps(true);
+        settings.bind(|| {
+            insta::assert_yaml_snapshot!(ast);
+        });
+    }
+
+    #[test]
+    fn types() {
+        let code = r#"module test_types;
+
+prv struct Point {
+    x: i32,
+    y: i32
+}
+
+pub union Person {
+    student: Student,
+    teacher: Teacher,
+}
+
+pub enum Color {
+    Red,
+    Blue = 5,
+    Black = 8,
+    Yellow,
+}"#;
+        let ast = test_code(code, "test", "test_types");
+        let mut settings = insta::Settings::clone_current();
+        settings.set_sort_maps(true);
+        settings.bind(|| {
+            insta::assert_yaml_snapshot!(ast);
+        });
+    }
+
+    #[test]
+    fn test_match() {
+        let code = r#"module test_match;
+
+import std;
+
+pub fn is_true(cond: bool) -> bool {
+    match (cond) {
+        true => { return true; }
+        false => { return false; }
+        _ => { std::print("Never happends"); }
+    }
+}"#;
+        let ast = test_code(code, "test", "test_match");
         let mut settings = insta::Settings::clone_current();
         settings.set_sort_maps(true);
         settings.bind(|| {

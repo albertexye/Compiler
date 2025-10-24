@@ -1,0 +1,83 @@
+---
+source: src/syntactic_parser/mod.rs
+expression: ast
+---
+name: test
+module: test_types
+imports: []
+globals: {}
+functions: {}
+types:
+  Color:
+    visibility: Public
+    value:
+      name: Color
+      body:
+        Enum:
+          Black: 8
+          Blue: 5
+          Red: 0
+          Yellow: 9
+      span:
+        line: 13
+        column: 10
+        index: 140
+        size: 5
+  Person:
+    visibility: Public
+    value:
+      name: Person
+      body:
+        Union:
+          student:
+            base:
+              - Student
+            modifiers: []
+            span:
+              line: 9
+              column: 14
+              index: 97
+              size: 7
+          teacher:
+            base:
+              - Teacher
+            modifiers: []
+            span:
+              line: 10
+              column: 14
+              index: 119
+              size: 7
+      span:
+        line: 8
+        column: 11
+        index: 75
+        size: 6
+  Point:
+    visibility: Private
+    value:
+      name: Point
+      body:
+        Struct:
+          x:
+            base:
+              - i32
+            modifiers: []
+            span:
+              line: 4
+              column: 8
+              index: 46
+              size: 3
+          y:
+            base:
+              - i32
+            modifiers: []
+            span:
+              line: 5
+              column: 8
+              index: 58
+              size: 3
+      span:
+        line: 3
+        column: 12
+        index: 31
+        size: 5
