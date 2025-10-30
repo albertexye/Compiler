@@ -6,9 +6,13 @@ use super::*;
 use syntax_ast::{File, Scope};
 
 impl SyntacticParser {
-    pub(super) fn parse_file(&mut self, filename: &str, module_name: &str) -> Result<File, Error> {
+    pub(super) fn parse_file(
+        &mut self,
+        filename: SymbolId,
+        module_name: SymbolId,
+    ) -> Result<File, Error> {
         let module = self.parse_module_declaration()?;
-        if Some(module) != self.lexer.symbol_table.search(module_name) {
+        if module != module_name {
             return Err(self.error(ErrorType::Module, "Incorrect module name"));
         }
         let imports = self.parse_imports()?;
@@ -19,7 +23,7 @@ impl SyntacticParser {
             self.parse_content(&mut types, &mut globals, &mut functions)?;
         }
         Ok(File {
-            name: self.lexer.symbol_table.insert(filename.to_string()),
+            name: filename,
             module,
             imports,
             globals,
@@ -43,7 +47,7 @@ impl SyntacticParser {
             TokenType::Struct | TokenType::Enum | TokenType::Union | TokenType::Use => {
                 let value = self.parse_type_definition()?;
                 if types
-                    .insert(value.name.clone(), Scope { visibility, value })
+                    .insert(value.name, Scope { visibility, value })
                     .is_some()
                 {
                     return Err(self.error(ErrorType::Module, "Duplicated type name"));
@@ -52,7 +56,7 @@ impl SyntacticParser {
             TokenType::Let | TokenType::Var => {
                 let value = self.parse_declaration()?;
                 if globals
-                    .insert(value.name.clone(), Scope { visibility, value })
+                    .insert(value.name, Scope { visibility, value })
                     .is_some()
                 {
                     return Err(self.error(ErrorType::Module, "Duplicated global name"));
@@ -61,7 +65,7 @@ impl SyntacticParser {
             TokenType::Fn => {
                 let value = self.parse_function()?;
                 if functions
-                    .insert(value.name.clone(), Scope { visibility, value })
+                    .insert(value.name, Scope { visibility, value })
                     .is_some()
                 {
                     return Err(self.error(ErrorType::Module, "Duplicated function name"));

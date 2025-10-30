@@ -1,22 +1,20 @@
-use std::{
-    collections::{HashMap, HashSet},
-    path::PathBuf,
-};
+use std::collections::{HashMap, HashSet};
 
 use crate::token::{SymbolId, TokenSpan};
 use serde::Serialize;
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Ast {
-    pub(crate) entry: PathBuf,
-    pub(crate) modules: HashMap<PathBuf, Module>,
+    pub(crate) entry: SymbolId,
+    pub(crate) modules: HashMap<SymbolId, Module>,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Module {
-    pub(crate) name: String,
+    pub(crate) name: SymbolId,
     pub(crate) files: HashMap<SymbolId, File>, // filename: file
-    pub(crate) dependencies: HashMap<SymbolId, PathBuf>, // import name: module path
+    pub(crate) modules: HashMap<SymbolId, Module>,
+    pub(crate) dependencies: HashSet<SymbolId>,
 }
 
 #[derive(Debug, PartialEq, Serialize)]

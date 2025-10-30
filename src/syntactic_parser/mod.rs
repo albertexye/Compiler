@@ -12,6 +12,7 @@ mod file;
 mod function;
 mod r#loop;
 mod r#match;
+mod module;
 mod r#return;
 mod statement;
 mod type_annotation;
@@ -22,6 +23,7 @@ mod utils;
 pub(crate) enum ErrorType {
     Lexer(Box<crate::lexer::Error>),
     Io(Box<std::io::Error>),
+    ModuleFile(Box<serde_json::Error>),
     Module,
     Import,
     LineEnd,
@@ -58,11 +60,11 @@ impl SyntacticParser {
         }
     }
 
-    pub(crate) fn parse(
+    pub(crate) fn parse_code(
         &mut self,
         code: &str,
-        filename: &str,
-        module_name: &str,
+        filename: SymbolId,
+        module_name: SymbolId,
     ) -> Result<syntax_ast::File, Error> {
         self.tokens = match self.lexer.lex(code) {
             Ok(tokens) => tokens,
@@ -88,7 +90,9 @@ mod tests {
 
     fn test_code(code: &str, filename: &str, module_name: &str) -> File {
         let mut parser = SyntacticParser::new();
-        let ast = parser.parse(code, filename, module_name).unwrap();
+        let filename = parser.lexer.symbol_table.insert(filename.to_string());
+        let module_name = parser.lexer.symbol_table.insert(module_name.to_string());
+        let ast = parser.parse_code(code, filename, module_name).unwrap();
         token::set_symbol_context(parser.lexer.symbol_table);
         ast
     }
