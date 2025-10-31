@@ -1,13 +1,11 @@
+use super::*;
 use std::{
     collections::{HashMap, HashSet},
     fs,
     path::{Path, PathBuf},
     str::FromStr,
 };
-
-use crate::syntax_ast::{Ast, Module};
-
-use super::*;
+use syntax_ast::{Ast, Module};
 
 impl SyntacticParser {
     fn path_to_module_name(&mut self, path: &Path) -> SymbolId {

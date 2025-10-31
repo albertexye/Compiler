@@ -1,7 +1,6 @@
-use std::collections::{HashMap, HashSet};
-
 use crate::token::{SymbolId, TokenSpan};
 use serde::Serialize;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Ast {
@@ -95,8 +94,14 @@ pub(crate) struct Function {
     pub(crate) name: SymbolId,
     pub(crate) arguments: Vec<FunctionArg>,
     pub(crate) return_type: Option<TypeAnnot>,
-    pub(crate) body: Vec<Statement>,
+    pub(crate) body: FunctionBody,
     pub(crate) span: TokenSpan,
+}
+
+#[derive(Debug, PartialEq, Serialize)]
+pub(crate) enum FunctionBody {
+    Normal(Vec<Statement>),
+    Asm(String),
 }
 
 #[derive(Debug, PartialEq, Serialize)]

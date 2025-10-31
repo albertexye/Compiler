@@ -1,9 +1,6 @@
-use std::collections::HashMap;
-
-use crate::syntax_ast::ExpressionValue;
-
 use super::*;
-use syntax_ast::{Binary, BinaryOp, Call, Expression, Unary, UnaryOp};
+use std::collections::HashMap;
+use syntax_ast::{Binary, BinaryOp, Call, Expression, ExpressionValue, Unary, UnaryOp};
 
 impl SyntacticParser {
     pub(super) fn parse_expression(&mut self) -> Result<Expression, Error> {

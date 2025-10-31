@@ -1,9 +1,6 @@
-use std::collections::{HashMap, HashSet};
-
-use crate::syntax_ast::{Declaration, Function, TypeDef, Visibility};
-
 use super::*;
-use syntax_ast::{File, Scope};
+use std::collections::{HashMap, HashSet};
+use syntax_ast::{Declaration, File, Function, Scope, TypeDef, Visibility};
 
 impl SyntacticParser {
     pub(super) fn parse_file(
@@ -62,7 +59,7 @@ impl SyntacticParser {
                     return Err(self.error(ErrorType::Module, "Duplicated global name"));
                 }
             }
-            TokenType::Fn => {
+            TokenType::Fn | TokenType::Asm => {
                 let value = self.parse_function()?;
                 if functions
                     .insert(value.name, Scope { visibility, value })

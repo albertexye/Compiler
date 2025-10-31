@@ -35,9 +35,8 @@ use Names = []var []var u8;
 ```
 */
 
-use std::collections::{HashMap, HashSet};
-
 use super::*;
+use std::collections::{HashMap, HashSet};
 use syntax_ast::{TypeAnnot, TypeDef, TypeDefBody};
 
 impl SyntacticParser {
