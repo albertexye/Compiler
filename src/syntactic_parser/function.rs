@@ -1,10 +1,9 @@
 use super::*;
-use syntax_ast::{Function, FunctionArg, FunctionBody, TypeAnnot};
+use syntax_ast::{Function, FunctionArg, TypeAnnot};
 
 impl SyntacticParser {
     pub(super) fn parse_function(&mut self) -> Result<Function, Error> {
-        std::debug_assert!(self.is_keyword(TokenType::Fn) || self.is_keyword(TokenType::Asm));
-        let is_fn = self.is_keyword(TokenType::Fn);
+        std::debug_assert!(self.is_keyword(TokenType::Fn));
         self.advance();
         let Some(name) = self.is_identifier() else {
             return Err(self.error(ErrorType::Function, "Expected function name"));
@@ -13,11 +12,7 @@ impl SyntacticParser {
         self.advance();
         let arguments = self.parse_arguments()?;
         let return_typ = self.parse_return_type()?;
-        let body = if is_fn {
-            FunctionBody::Normal(self.parse_block()?)
-        } else {
-            FunctionBody::Asm(self.parse_asm()?)
-        };
+        let body = self.parse_block()?;
         Ok(Function {
             name,
             arguments,
@@ -25,21 +20,6 @@ impl SyntacticParser {
             body,
             span,
         })
-    }
-
-    fn parse_asm(&mut self) -> Result<String, Error> {
-        self.expect_keyword(TokenType::OpenParen, ErrorType::Function, "Expected `{`")?;
-        self.advance();
-        let mut lines = Vec::new();
-        while let Some(token) = self.peek() {
-            match token.value {
-                TokenValue::Literal(token::Literal::String(string)) => lines.push(string),
-                _ => break,
-            }
-            self.advance();
-        }
-        self.expect_keyword(TokenType::CloseParen, ErrorType::Function, "Expected `}`")?;
-        Ok(lines.join("\n"))
     }
 
     fn parse_return_type(&mut self) -> Result<Option<TypeAnnot>, Error> {

@@ -59,7 +59,7 @@ impl SyntacticParser {
                     return Err(self.error(ErrorType::Module, "Duplicated global name"));
                 }
             }
-            TokenType::Fn | TokenType::Asm => {
+            TokenType::Fn => {
                 let value = self.parse_function()?;
                 if functions
                     .insert(value.name, Scope { visibility, value })

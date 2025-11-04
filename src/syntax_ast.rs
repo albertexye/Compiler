@@ -94,14 +94,8 @@ pub(crate) struct Function {
     pub(crate) name: SymbolId,
     pub(crate) arguments: Vec<FunctionArg>,
     pub(crate) return_type: Option<TypeAnnot>,
-    pub(crate) body: FunctionBody,
+    pub(crate) body: Vec<Statement>,
     pub(crate) span: TokenSpan,
-}
-
-#[derive(Debug, PartialEq, Serialize)]
-pub(crate) enum FunctionBody {
-    Normal(Vec<Statement>),
-    Asm(String),
 }
 
 #[derive(Debug, PartialEq, Serialize)]

@@ -59,7 +59,6 @@ pub(crate) enum TokenType {
     Continue,
     Return,
     Fn,
-    Asm,
     Let,
     Var,
     Struct,
@@ -116,15 +115,15 @@ impl Sub for TokenSpan {
     }
 }
 
-const TOKEN_TYPES_STR: [&str; 65] = [
+const TOKEN_TYPES_STR: [&str; 64] = [
     ",", ";", ":", "::", ".", "(", ")", "[", "]", "{", "}", "+", "+=", "-", "-=", "*", "*=", "/",
     "/=", "%", "%=", "<<", "<<=", ">>", ">>=", "&", "&=", "|", "|=", "^", "^=", "~", "and", "or",
     "!", "==", "!=", ">", ">=", "<", "<=", "=", "->", "=>", "if", "else", "match", "while", "for",
-    "break", "continue", "return", "fn", "asm", "let", "var", "struct", "enum", "union", "pub",
-    "prv", "mod", "module", "import", "use",
+    "break", "continue", "return", "fn", "let", "var", "struct", "enum", "union", "pub", "prv",
+    "mod", "module", "import", "use",
 ];
 
-const TOKEN_TYPES_ENUM: [TokenType; 65] = [
+const TOKEN_TYPES_ENUM: [TokenType; 64] = [
     TokenType::Comma,
     TokenType::Semicolon,
     TokenType::Colon,
@@ -178,7 +177,6 @@ const TOKEN_TYPES_ENUM: [TokenType; 65] = [
     TokenType::Continue,
     TokenType::Return,
     TokenType::Fn,
-    TokenType::Asm,
     TokenType::Let,
     TokenType::Var,
     TokenType::Struct,
