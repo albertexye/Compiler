@@ -70,8 +70,20 @@ pub(crate) enum Statement {
 }
 
 #[derive(Debug, PartialEq, Serialize)]
+pub(crate) struct FunctionSig {
+    pub(crate) args: Vec<TypeAnnot>,
+    pub(crate) ret: Option<Box<TypeAnnot>>,
+}
+
+#[derive(Debug, PartialEq, Serialize)]
+pub(crate) enum TypeAnnotBase {
+    Normal(Name),
+    Function(FunctionSig),
+}
+
+#[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct TypeAnnot {
-    pub(crate) base: Name,
+    pub(crate) base: TypeAnnotBase,
     pub(crate) modifiers: Vec<TypeModifier>,
     pub(crate) span: TokenSpan,
 }

@@ -1,3 +1,5 @@
+use crate::syntax_ast::{FunctionSig, TypeAnnotBase};
+
 use super::*;
 use syntax_ast::{TypeAnnot, TypeModifier, TypeModifierType};
 
@@ -11,7 +13,7 @@ impl SyntacticParser {
             match token.value {
                 TokenValue::Identifier(_) => {
                     return Ok(TypeAnnot {
-                        base: self.parse_name()?,
+                        base: self.parse_base()?,
                         modifiers,
                         span: token.span - start.unwrap().span,
                     });
@@ -25,6 +27,41 @@ impl SyntacticParser {
                 }
             }
         }
+    }
+
+    fn parse_base(&mut self) -> Result<TypeAnnotBase, Error> {
+        if !self.is_keyword(TokenType::Fn) {
+            return Ok(TypeAnnotBase::Normal(self.parse_name()?));
+        }
+        self.advance();
+        self.expect_keyword(
+            TokenType::OpenParen,
+            ErrorType::TypeAnnotation,
+            "Expected function argument types",
+        )?;
+        self.advance();
+        let mut args = Vec::new();
+        while !self.is_keyword(TokenType::CloseParen) {
+            args.push(self.parse_type_annotation()?);
+            if !self.is_keyword(TokenType::Comma) {
+                break;
+            }
+            self.advance();
+        }
+        self.expect_keyword(
+            TokenType::CloseParen,
+            ErrorType::TypeAnnotation,
+            "Expected `)`",
+        )?;
+        self.advance();
+        if !self.is_keyword(TokenType::ReturnType) {
+            return Ok(TypeAnnotBase::Function(FunctionSig { args, ret: None }));
+        }
+        self.advance();
+        Ok(TypeAnnotBase::Function(FunctionSig {
+            args,
+            ret: Some(Box::new(self.parse_type_annotation()?)),
+        }))
     }
 
     fn parse_type_modifier(&mut self, keyword: TokenType) -> Result<TypeModifier, Error> {
