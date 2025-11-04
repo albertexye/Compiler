@@ -1,10 +1,8 @@
-mod file;
-
 pub(crate) enum ErrorType {}
 
 pub(crate) struct Error {
     pub(crate) typ: ErrorType,
-    pub(crate) msg: String,
+    pub(crate) msg: &'static str,
 }
 
 pub(crate) struct SemanticParser {}

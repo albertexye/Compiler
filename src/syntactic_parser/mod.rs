@@ -2,7 +2,7 @@ use crate::lexer::Lexer;
 use crate::syntax_ast;
 use crate::syntax_ast::{Name, Statement};
 use crate::token;
-use crate::token::{SymbolId, Token, TokenType, TokenValue};
+use crate::token::{SymbolId, SymbolTable, Token, TokenType, TokenValue};
 
 mod assignment;
 mod conditional;
@@ -46,27 +46,18 @@ pub(crate) struct Error {
 }
 
 pub struct SyntacticParser {
-    lexer: Lexer,
     tokens: Vec<Token>,
     index: usize,
 }
 
 impl SyntacticParser {
-    pub(crate) fn new() -> SyntacticParser {
-        SyntacticParser {
-            lexer: Lexer::new(),
-            tokens: Vec::new(),
-            index: 0,
-        }
-    }
-
     pub(crate) fn parse_code(
-        &mut self,
         code: &str,
         filename: SymbolId,
         module_name: SymbolId,
+        symbol_table: &mut SymbolTable,
     ) -> Result<syntax_ast::File, Error> {
-        self.tokens = match self.lexer.lex(code) {
+        let tokens = match Lexer::lex(code, symbol_table) {
             Ok(tokens) => tokens,
             Err(err) => {
                 return Err(Error {
@@ -76,9 +67,8 @@ impl SyntacticParser {
                 });
             }
         };
-        let ret = self.parse_file(filename, module_name);
-        self.tokens = Vec::new();
-        ret
+        let mut parser = Self { tokens, index: 0 };
+        parser.parse_file(filename, module_name, symbol_table)
     }
 }
 
@@ -89,11 +79,12 @@ mod tests {
     use super::*;
 
     fn test_code(code: &str, filename: &str, module_name: &str) -> File {
-        let mut parser = SyntacticParser::new();
-        let filename = parser.lexer.symbol_table.insert(filename.to_string());
-        let module_name = parser.lexer.symbol_table.insert(module_name.to_string());
-        let ast = parser.parse_code(code, filename, module_name).unwrap();
-        token::set_symbol_context(parser.lexer.symbol_table);
+        let mut symbol_table = SymbolTable::new();
+        let filename = symbol_table.insert(filename.to_string());
+        let module_name = symbol_table.insert(module_name.to_string());
+        let ast =
+            SyntacticParser::parse_code(code, filename, module_name, &mut symbol_table).unwrap();
+        token::set_symbol_context(symbol_table);
         ast
     }
 

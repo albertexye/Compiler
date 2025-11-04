@@ -17,8 +17,6 @@ pub(crate) struct Lexer {
     start_index: usize,
     start_line: usize,
     start_column: usize,
-
-    pub(crate) symbol_table: SymbolTable,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -37,32 +35,20 @@ pub(crate) struct Error {
 }
 
 impl Lexer {
-    pub(crate) fn new() -> Self {
-        Lexer {
-            input: Vec::new(),
+    pub(crate) fn lex(input: &str, symbol_table: &mut SymbolTable) -> Result<Vec<Token>, Error> {
+        let mut lexer = Self {
+            input: input.chars().collect(),
             index: 0,
             line: 1,
             column: 1,
             start_index: 0,
             start_line: 1,
             start_column: 1,
-            symbol_table: SymbolTable::new(),
-        }
-    }
-
-    pub(crate) fn lex(&mut self, input: &str) -> Result<Vec<Token>, Error> {
-        self.input = input.chars().collect();
-        self.index = 0;
-        self.line = 1;
-        self.column = 1;
-        self.start_index = 0;
-        self.start_line = 1;
-        self.start_column = 1;
+        };
         let mut tokens = Vec::new();
-        while let Some(token) = self.next_token()? {
+        while let Some(token) = lexer.next_token(symbol_table)? {
             tokens.push(token);
         }
-        self.input = Vec::new();
         Ok(tokens)
     }
 }
@@ -84,8 +70,8 @@ mod tests {
 
     // Helper function to compare lexed tokens with expected tokens, including spans.
     fn assert_lexes(input: &str, expected: Vec<Token>) {
-        let mut lexer = Lexer::new();
-        let tokens = lexer.lex(input).unwrap();
+        let mut symbol_table = SymbolTable::new();
+        let tokens = Lexer::lex(input, &mut symbol_table).unwrap();
         assert_eq!(tokens, expected);
     }
 
@@ -167,9 +153,9 @@ mod tests {
 
     #[test]
     fn test_number_errors() {
-        let mut lexer = Lexer::new();
-        assert!(lexer.lex("0xG").is_err());
-        assert!(lexer.lex("0b2").is_err());
+        let mut symbol_table = SymbolTable::new();
+        assert!(Lexer::lex("0xG", &mut symbol_table).is_err());
+        assert!(Lexer::lex("0b2", &mut symbol_table).is_err());
     }
 
     #[test]
@@ -192,21 +178,21 @@ mod tests {
 
     #[test]
     fn test_unclosed_string() {
-        let mut lexer = Lexer::new();
-        assert!(lexer.lex(r#""hello"#).is_err());
+        let mut symbol_table = SymbolTable::new();
+        assert!(Lexer::lex(r#""hello"#, &mut symbol_table).is_err());
     }
 
     #[test]
     fn test_identifiers_and_keywords() {
-        let mut lexer = Lexer::new();
-        let tokens = lexer.lex("let x = 5;").unwrap();
+        let mut symbol_table = SymbolTable::new();
+        let tokens = Lexer::lex("let x = 5;", &mut symbol_table).unwrap();
         let expected = vec![
             Token {
                 value: TokenValue::Keyword(TokenType::Let),
                 span: span(1, 1, 0, 3),
             },
             Token {
-                value: TokenValue::Identifier(lexer.symbol_table.search("x").unwrap()),
+                value: TokenValue::Identifier(symbol_table.search("x").unwrap()),
                 span: span(1, 5, 4, 1),
             },
             Token {
@@ -252,15 +238,15 @@ mod tests {
 
     #[test]
     fn test_multiline_lexing() {
-        let mut lexer = Lexer::new();
-        let tokens = lexer.lex("let y\n  = 10;").unwrap();
+        let mut symbol_table = SymbolTable::new();
+        let tokens = Lexer::lex("let y\n  = 10;", &mut symbol_table).unwrap();
         let expected = vec![
             Token {
                 value: TokenValue::Keyword(TokenType::Let),
                 span: span(1, 1, 0, 3),
             },
             Token {
-                value: TokenValue::Identifier(lexer.symbol_table.search("y").unwrap()),
+                value: TokenValue::Identifier(symbol_table.search("y").unwrap()),
                 span: span(1, 5, 4, 1),
             },
             Token {

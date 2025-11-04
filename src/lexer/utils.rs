@@ -24,13 +24,16 @@ impl Lexer {
         self.input.get(self.index + 1)
     }
 
-    pub(super) fn next_token(&mut self) -> Result<Option<Token>, Error> {
+    pub(super) fn next_token(
+        &mut self,
+        symbol_table: &mut SymbolTable,
+    ) -> Result<Option<Token>, Error> {
         self.skip_whitespace_and_comments();
         self.start_token();
         if self.peek().is_none() {
             return Ok(None);
         }
-        let value = self.next_token_value()?;
+        let value = self.next_token_value(symbol_table)?;
         Ok(Some(Token {
             value,
             span: self.end_token(),
@@ -38,10 +41,10 @@ impl Lexer {
     }
 
     /// Returns the next token from the input, or None if at end.
-    fn next_token_value(&mut self) -> Result<TokenValue, Error> {
+    fn next_token_value(&mut self, symbol_table: &mut SymbolTable) -> Result<TokenValue, Error> {
         let ch = *self.peek().unwrap();
         if ch.is_alphabetic() || ch == '_' {
-            return Ok(self.read_identifier());
+            return Ok(self.read_identifier(symbol_table));
         }
         if ch == '"' {
             return self.read_string();
@@ -54,7 +57,7 @@ impl Lexer {
             {
                 return self.read_number();
             }
-            return self.read_punctuator();
+            return self.read_punctuator(symbol_table);
         }
         if ch.is_ascii_digit() {
             return self.read_number();

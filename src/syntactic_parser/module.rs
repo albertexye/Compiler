@@ -8,9 +8,9 @@ use std::{
 use syntax_ast::{Ast, Module};
 
 impl SyntacticParser {
-    fn path_to_module_name(&mut self, path: &Path) -> SymbolId {
+    fn path_to_module_name(path: &Path, symbol_table: &mut SymbolTable) -> SymbolId {
         let name = path.file_name().unwrap().to_str().unwrap().to_string();
-        self.lexer.symbol_table.insert(name)
+        symbol_table.insert(name)
     }
 
     fn read_file(path: PathBuf) -> Result<String, Error> {
@@ -25,13 +25,13 @@ impl SyntacticParser {
     }
 
     fn parse_module_file(
-        &mut self,
         module_path: &Path,
         queue: &mut HashSet<PathBuf>,
         modules: &HashMap<SymbolId, Module>,
+        symbol_table: &mut SymbolTable,
     ) -> Result<HashSet<SymbolId>, Error> {
         let module_file = module_path.join("module.json");
-        let content = SyntacticParser::read_file(module_file)?;
+        let content = Self::read_file(module_file)?;
         let dependencies: Vec<String> = match serde_json::from_str(&content) {
             Ok(dependencies) => dependencies,
             Err(err) => {
@@ -45,7 +45,7 @@ impl SyntacticParser {
         let mut ret = HashSet::with_capacity(dependencies.len());
         for dep in dependencies {
             let path = PathBuf::from_str(&dep).unwrap();
-            let name = self.path_to_module_name(&path);
+            let name = SyntacticParser::path_to_module_name(&path, symbol_table);
             if queue.contains(&path) || modules.contains_key(&name) {
                 continue;
             }
@@ -93,15 +93,15 @@ impl SyntacticParser {
     }
 
     fn parse_module(
-        &mut self,
         module_path: &Path,
         queue: &mut HashSet<PathBuf>,
         modules: &HashMap<SymbolId, Module>,
+        symbol_table: &mut SymbolTable,
     ) -> Result<Module, Error> {
-        let dependencies = self.parse_module_file(module_path, queue, modules)?;
+        let dependencies = Self::parse_module_file(module_path, queue, modules, symbol_table)?;
         let mut files = HashMap::new();
         let (file_paths, module_paths) = SyntacticParser::read_dir(module_path)?;
-        let module_name = self.path_to_module_name(module_path);
+        let module_name = Self::path_to_module_name(module_path, symbol_table);
         for path in file_paths {
             let code = match fs::read_to_string(&path) {
                 Ok(code) => code,
@@ -113,14 +113,14 @@ impl SyntacticParser {
                     });
                 }
             };
-            let filename = self.path_to_module_name(&path);
-            let file = self.parse_code(&code, filename, module_name)?;
+            let filename = Self::path_to_module_name(&path, symbol_table);
+            let file = Self::parse_code(&code, filename, module_name, symbol_table)?;
             files.insert(filename, file);
         }
         let mut submodules = HashMap::new();
         for path in module_paths {
-            let name = self.path_to_module_name(&path);
-            let submodule = self.parse_module(&path, queue, modules)?;
+            let name = Self::path_to_module_name(&path, symbol_table);
+            let submodule = Self::parse_module(&path, queue, modules, symbol_table)?;
             submodules.insert(name, submodule);
         }
         Ok(Module {
@@ -131,7 +131,10 @@ impl SyntacticParser {
         })
     }
 
-    pub(crate) fn parse_modules(&mut self, module_path: &Path) -> Result<Ast, Error> {
+    pub(crate) fn parse_modules(
+        module_path: &Path,
+        symbol_table: &mut SymbolTable,
+    ) -> Result<Ast, Error> {
         let entry = module_path.to_path_buf();
         let mut queue = HashSet::new();
         let mut modules = HashMap::new();
@@ -147,12 +150,12 @@ impl SyntacticParser {
                     token: None,
                 });
             }
-            let module = self.parse_module(&path, &mut queue, &modules)?;
-            modules.insert(self.path_to_module_name(&path), module);
+            let module = Self::parse_module(&path, &mut queue, &modules, symbol_table)?;
+            modules.insert(Self::path_to_module_name(&path, symbol_table), module);
             queue.remove(&path);
         }
         Ok(Ast {
-            entry: self.path_to_module_name(&entry),
+            entry: Self::path_to_module_name(&entry, symbol_table),
             modules,
         })
     }

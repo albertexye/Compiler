@@ -2,11 +2,14 @@ use super::*;
 use syntax_ast::{Conditional, ConditionalBranch};
 
 impl SyntacticParser {
-    pub(super) fn parse_conditional(&mut self) -> Result<Statement, Error> {
+    pub(super) fn parse_conditional(
+        &mut self,
+        symbol_table: &mut SymbolTable,
+    ) -> Result<Statement, Error> {
         std::debug_assert!(self.is_keyword(TokenType::If));
         self.advance();
         let if_condition = self.parse_paren_exp()?;
-        let if_block = self.parse_block()?;
+        let if_block = self.parse_block(symbol_table)?;
         let if_branch = ConditionalBranch {
             condition: if_condition,
             body: if_block,
@@ -18,13 +21,13 @@ impl SyntacticParser {
             if self.is_keyword(TokenType::If) {
                 self.advance();
                 let elif_condition = self.parse_paren_exp()?;
-                let elif_block = self.parse_block()?;
+                let elif_block = self.parse_block(symbol_table)?;
                 elif_branches.push(ConditionalBranch {
                     condition: elif_condition,
                     body: elif_block,
                 });
             } else {
-                else_branch = Some(self.parse_block()?);
+                else_branch = Some(self.parse_block(symbol_table)?);
                 break;
             }
         }

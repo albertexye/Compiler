@@ -7,6 +7,7 @@ impl SyntacticParser {
         &mut self,
         filename: SymbolId,
         module_name: SymbolId,
+        symbol_table: &mut SymbolTable,
     ) -> Result<File, Error> {
         let module = self.parse_module_declaration()?;
         if module != module_name {
@@ -17,7 +18,7 @@ impl SyntacticParser {
         let mut globals = HashMap::new();
         let mut functions = HashMap::new();
         while self.peek().is_some() {
-            self.parse_content(&mut types, &mut globals, &mut functions)?;
+            self.parse_content(&mut types, &mut globals, &mut functions, symbol_table)?;
         }
         Ok(File {
             name: filename,
@@ -34,6 +35,7 @@ impl SyntacticParser {
         types: &mut HashMap<SymbolId, Scope<TypeDef>>,
         globals: &mut HashMap<SymbolId, Scope<Declaration>>,
         functions: &mut HashMap<SymbolId, Scope<Function>>,
+        symbol_table: &mut SymbolTable,
     ) -> Result<(), Error> {
         let visibility = self.parse_visibility()?;
         let token = self.expect_token(ErrorType::Module, "Missing symbol definition")?;
@@ -60,7 +62,7 @@ impl SyntacticParser {
                 }
             }
             TokenType::Fn => {
-                let value = self.parse_function()?;
+                let value = self.parse_function(symbol_table)?;
                 if functions
                     .insert(value.name, Scope { visibility, value })
                     .is_some()

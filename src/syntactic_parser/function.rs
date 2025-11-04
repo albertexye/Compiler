@@ -2,7 +2,10 @@ use super::*;
 use syntax_ast::{Function, FunctionArg, TypeAnnot};
 
 impl SyntacticParser {
-    pub(super) fn parse_function(&mut self) -> Result<Function, Error> {
+    pub(super) fn parse_function(
+        &mut self,
+        symbol_table: &mut SymbolTable,
+    ) -> Result<Function, Error> {
         std::debug_assert!(self.is_keyword(TokenType::Fn));
         self.advance();
         let Some(name) = self.is_identifier() else {
@@ -12,7 +15,7 @@ impl SyntacticParser {
         self.advance();
         let arguments = self.parse_arguments()?;
         let return_typ = self.parse_return_type()?;
-        let body = self.parse_block()?;
+        let body = self.parse_block(symbol_table)?;
         Ok(Function {
             name,
             arguments,
