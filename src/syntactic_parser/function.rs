@@ -4,7 +4,7 @@ use syntax_ast::{Function, FunctionArg, TypeAnnot};
 impl SyntacticParser {
     pub(super) fn parse_function(
         &mut self,
-        symbol_table: &mut SymbolTable,
+        pool: &mut InternPool,
     ) -> Result<Function, Error> {
         std::debug_assert!(self.is_keyword(TokenType::Fn));
         self.advance();
@@ -15,7 +15,7 @@ impl SyntacticParser {
         self.advance();
         let arguments = self.parse_arguments()?;
         let return_typ = self.parse_return_type()?;
-        let body = self.parse_block(symbol_table)?;
+        let body = self.parse_block(pool)?;
         Ok(Function {
             name,
             arguments,

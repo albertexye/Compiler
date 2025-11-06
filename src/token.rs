@@ -196,35 +196,33 @@ const _: () = assert!(TOKEN_TYPES_STR.len() == TOKEN_TYPES_ENUM.len());
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub(crate) struct SymbolId(usize);
 
-pub(crate) struct SymbolTable {
+pub(crate) struct InternPool {
     counter: SymbolId,
-    table: HashMap<String, SymbolId>,
+    pool: HashMap<String, SymbolId>,
     reverse: Option<Vec<String>>,
 }
 
-impl SymbolTable {
-    pub(crate) fn new() -> SymbolTable {
-        let mut sym_table = SymbolTable {
+impl InternPool {
+    pub(crate) fn new() -> InternPool {
+        let mut pool = InternPool {
             counter: SymbolId(0),
-            table: HashMap::new(),
+            pool: HashMap::new(),
             reverse: None,
         };
         for keyword in TOKEN_TYPES_STR {
-            sym_table
-                .table
-                .insert(keyword.to_string(), sym_table.counter);
-            sym_table.counter.0 += 1;
+            pool.pool.insert(keyword.to_string(), pool.counter);
+            pool.counter.0 += 1;
         }
-        sym_table
+        pool
     }
 
     pub(crate) fn insert(&mut self, token: String) -> SymbolId {
         std::debug_assert!(self.reverse.is_none());
-        if self.table.contains_key(&token) {
-            self.table[&token]
+        if self.pool.contains_key(&token) {
+            self.pool[&token]
         } else {
             let id = self.counter;
-            self.table.insert(token, self.counter);
+            self.pool.insert(token, self.counter);
             self.counter.0 += 1;
             id
         }
@@ -232,8 +230,8 @@ impl SymbolTable {
 
     pub(crate) fn search(&self, token: &str) -> Option<SymbolId> {
         std::debug_assert!(self.reverse.is_none());
-        if self.table.contains_key(token) {
-            Some(self.table[token])
+        if self.pool.contains_key(token) {
+            Some(self.pool[token])
         } else {
             None
         }
@@ -244,7 +242,7 @@ impl SymbolTable {
     }
 
     pub(crate) fn get_keyword(id: &SymbolId) -> Option<TokenType> {
-        if !SymbolTable::is_keyword(id) {
+        if !InternPool::is_keyword(id) {
             None
         } else {
             Some(TOKEN_TYPES_ENUM[id.0])
@@ -256,8 +254,8 @@ impl SymbolTable {
             Some(rev) => rev,
             None => {
                 let mut reverse = vec![String::new(); self.counter.0];
-                let table = std::mem::take(&mut self.table);
-                for (sym, id) in table.into_iter() {
+                let pool = std::mem::take(&mut self.pool);
+                for (sym, id) in pool.into_iter() {
                     reverse[id.0] = sym;
                 }
                 self.reverse = Some(reverse);
@@ -274,13 +272,13 @@ impl SymbolTable {
 
 #[cfg(test)]
 thread_local! {
-    static SYMBOL_CONTEXT: RefCell<SymbolTable> = RefCell::new(SymbolTable::new());
+    static SYMBOL_CONTEXT: RefCell<InternPool> = RefCell::new(InternPool::new());
 }
 
 #[cfg(test)]
-pub(crate) fn set_symbol_context(symbol_table: SymbolTable) {
+pub(crate) fn set_symbol_context(pool: InternPool) {
     SYMBOL_CONTEXT.with(|c| {
-        *c.borrow_mut() = symbol_table;
+        *c.borrow_mut() = pool;
     });
 }
 

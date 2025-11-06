@@ -16,7 +16,8 @@ functions:
         - name: cond
           typ:
             base:
-              - bool
+              Normal:
+                - bool
             modifiers: []
             span:
               line: 5
@@ -30,7 +31,8 @@ functions:
             size: 10
       return_type:
         base:
-          - bool
+          Normal:
+            - bool
         modifiers: []
         span:
           line: 5

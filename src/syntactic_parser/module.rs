@@ -8,9 +8,9 @@ use std::{
 use syntax_ast::{Ast, Module};
 
 impl SyntacticParser {
-    fn path_to_module_name(path: &Path, symbol_table: &mut SymbolTable) -> SymbolId {
+    fn path_to_module_name(path: &Path, pool: &mut InternPool) -> SymbolId {
         let name = path.file_name().unwrap().to_str().unwrap().to_string();
-        symbol_table.insert(name)
+        pool.insert(name)
     }
 
     fn read_file(path: PathBuf) -> Result<String, Error> {
@@ -28,7 +28,7 @@ impl SyntacticParser {
         module_path: &Path,
         queue: &mut HashSet<PathBuf>,
         modules: &HashMap<SymbolId, Module>,
-        symbol_table: &mut SymbolTable,
+        pool: &mut InternPool,
     ) -> Result<HashSet<SymbolId>, Error> {
         let module_file = module_path.join("module.json");
         let content = Self::read_file(module_file)?;
@@ -45,7 +45,7 @@ impl SyntacticParser {
         let mut ret = HashSet::with_capacity(dependencies.len());
         for dep in dependencies {
             let path = PathBuf::from_str(&dep).unwrap();
-            let name = SyntacticParser::path_to_module_name(&path, symbol_table);
+            let name = SyntacticParser::path_to_module_name(&path, pool);
             if queue.contains(&path) || modules.contains_key(&name) {
                 continue;
             }
@@ -96,12 +96,12 @@ impl SyntacticParser {
         module_path: &Path,
         queue: &mut HashSet<PathBuf>,
         modules: &HashMap<SymbolId, Module>,
-        symbol_table: &mut SymbolTable,
+        pool: &mut InternPool,
     ) -> Result<Module, Error> {
-        let dependencies = Self::parse_module_file(module_path, queue, modules, symbol_table)?;
+        let dependencies = Self::parse_module_file(module_path, queue, modules, pool)?;
         let mut files = HashMap::new();
         let (file_paths, module_paths) = SyntacticParser::read_dir(module_path)?;
-        let module_name = Self::path_to_module_name(module_path, symbol_table);
+        let module_name = Self::path_to_module_name(module_path, pool);
         for path in file_paths {
             let code = match fs::read_to_string(&path) {
                 Ok(code) => code,
@@ -113,14 +113,14 @@ impl SyntacticParser {
                     });
                 }
             };
-            let filename = Self::path_to_module_name(&path, symbol_table);
-            let file = Self::parse_code(&code, filename, module_name, symbol_table)?;
+            let filename = Self::path_to_module_name(&path, pool);
+            let file = Self::parse_code(&code, filename, module_name, pool)?;
             files.insert(filename, file);
         }
         let mut submodules = HashMap::new();
         for path in module_paths {
-            let name = Self::path_to_module_name(&path, symbol_table);
-            let submodule = Self::parse_module(&path, queue, modules, symbol_table)?;
+            let name = Self::path_to_module_name(&path, pool);
+            let submodule = Self::parse_module(&path, queue, modules, pool)?;
             submodules.insert(name, submodule);
         }
         Ok(Module {
@@ -133,7 +133,7 @@ impl SyntacticParser {
 
     pub(crate) fn parse_modules(
         module_path: &Path,
-        symbol_table: &mut SymbolTable,
+        pool: &mut InternPool,
     ) -> Result<Ast, Error> {
         let entry = module_path.to_path_buf();
         let mut queue = HashSet::new();
@@ -150,12 +150,12 @@ impl SyntacticParser {
                     token: None,
                 });
             }
-            let module = Self::parse_module(&path, &mut queue, &modules, symbol_table)?;
-            modules.insert(Self::path_to_module_name(&path, symbol_table), module);
+            let module = Self::parse_module(&path, &mut queue, &modules, pool)?;
+            modules.insert(Self::path_to_module_name(&path, pool), module);
             queue.remove(&path);
         }
         Ok(Ast {
-            entry: Self::path_to_module_name(&entry, symbol_table),
+            entry: Self::path_to_module_name(&entry, pool),
             modules,
         })
     }

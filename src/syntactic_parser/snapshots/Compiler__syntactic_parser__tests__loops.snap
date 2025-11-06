@@ -16,7 +16,8 @@ functions:
         - name: n
           typ:
             base:
-              - u32
+              Normal:
+                - u32
             modifiers: []
             span:
               line: 5
@@ -30,7 +31,8 @@ functions:
             size: 6
       return_type:
         base:
-          - u8
+          Normal:
+            - u8
         modifiers: []
         span:
           line: 5
@@ -43,7 +45,8 @@ functions:
             mutable: true
             typ:
               base:
-                - u32
+                Normal:
+                  - u32
               modifiers: []
               span:
                 line: 6
@@ -69,7 +72,8 @@ functions:
             mutable: true
             typ:
               base:
-                - u8
+                Normal:
+                  - u8
               modifiers: []
               span:
                 line: 7
@@ -272,7 +276,8 @@ functions:
         - name: list
           typ:
             base:
-              - i32
+              Normal:
+                - i32
             modifiers:
               - mutable: false
                 typ: Slice
@@ -288,7 +293,8 @@ functions:
             size: 15
       return_type:
         base:
-          - i32
+          Normal:
+            - i32
         modifiers: []
         span:
           line: 15
@@ -301,7 +307,8 @@ functions:
             mutable: true
             typ:
               base:
-                - i32
+                Normal:
+                  - i32
               modifiers: []
               span:
                 line: 16
@@ -328,7 +335,8 @@ functions:
               mutable: true
               typ:
                 base:
-                  - i32
+                  Normal:
+                    - i32
                 modifiers: []
                 span:
                   line: 17

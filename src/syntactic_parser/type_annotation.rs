@@ -1,7 +1,5 @@
-use crate::syntax_ast::{FunctionSig, TypeAnnotBase};
-
 use super::*;
-use syntax_ast::{TypeAnnot, TypeModifier, TypeModifierType};
+use syntax_ast::{FunctionSig, TypeAnnot, TypeAnnotBase, TypeModifier, TypeModifierType};
 
 impl SyntacticParser {
     pub(super) fn parse_type_annotation(&mut self) -> Result<TypeAnnot, Error> {

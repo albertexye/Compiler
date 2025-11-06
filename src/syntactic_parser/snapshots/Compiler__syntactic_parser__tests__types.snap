@@ -31,7 +31,8 @@ types:
         Union:
           student:
             base:
-              - Student
+              Normal:
+                - Student
             modifiers: []
             span:
               line: 9
@@ -40,7 +41,8 @@ types:
               size: 7
           teacher:
             base:
-              - Teacher
+              Normal:
+                - Teacher
             modifiers: []
             span:
               line: 10
@@ -60,7 +62,8 @@ types:
         Struct:
           x:
             base:
-              - i32
+              Normal:
+                - i32
             modifiers: []
             span:
               line: 4
@@ -69,7 +72,8 @@ types:
               size: 3
           y:
             base:
-              - i32
+              Normal:
+                - i32
             modifiers: []
             span:
               line: 5

@@ -4,7 +4,7 @@ use syntax_ast::{ConditionalBranch, Match};
 impl SyntacticParser {
     pub(super) fn parse_match(
         &mut self,
-        symbol_table: &mut SymbolTable,
+        pool: &mut InternPool,
     ) -> Result<Statement, Error> {
         std::debug_assert!(self.is_keyword(TokenType::Match));
         self.advance();
@@ -27,15 +27,15 @@ impl SyntacticParser {
         let mut default = None;
         while !self.is_keyword(TokenType::CloseBracket) {
             if let Some(id) = self.is_identifier()
-                && Some(id) == symbol_table.search("_")
+                && Some(id) == pool.search("_")
             {
                 if default.is_some() {
                     return Err(self.error(ErrorType::Match, "Multiple default branches"));
                 }
                 self.advance();
-                default = Some(self.parse_case_body(symbol_table)?);
+                default = Some(self.parse_case_body(pool)?);
             } else {
-                cases.push(self.parse_case(symbol_table)?);
+                cases.push(self.parse_case(pool)?);
             }
         }
         self.advance();
@@ -46,17 +46,17 @@ impl SyntacticParser {
         }))
     }
 
-    fn parse_case(&mut self, symbol_table: &mut SymbolTable) -> Result<ConditionalBranch, Error> {
+    fn parse_case(&mut self, pool: &mut InternPool) -> Result<ConditionalBranch, Error> {
         let condition = self.parse_expression()?;
         Ok(ConditionalBranch {
             condition,
-            body: self.parse_case_body(symbol_table)?,
+            body: self.parse_case_body(pool)?,
         })
     }
 
-    fn parse_case_body(&mut self, symbol_table: &mut SymbolTable) -> Result<Vec<Statement>, Error> {
+    fn parse_case_body(&mut self, pool: &mut InternPool) -> Result<Vec<Statement>, Error> {
         self.expect_keyword(TokenType::MatchCase, ErrorType::Match, "Expected case")?;
         self.advance();
-        self.parse_block(symbol_table)
+        self.parse_block(pool)
     }
 }

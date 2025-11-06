@@ -2,7 +2,7 @@ use crate::lexer::Lexer;
 use crate::syntax_ast;
 use crate::syntax_ast::{Name, Statement};
 use crate::token;
-use crate::token::{SymbolId, SymbolTable, Token, TokenType, TokenValue};
+use crate::token::{InternPool, SymbolId, Token, TokenType, TokenValue};
 
 mod assignment;
 mod conditional;
@@ -55,9 +55,9 @@ impl SyntacticParser {
         code: &str,
         filename: SymbolId,
         module_name: SymbolId,
-        symbol_table: &mut SymbolTable,
+        pool: &mut InternPool,
     ) -> Result<syntax_ast::File, Error> {
-        let tokens = match Lexer::lex(code, symbol_table) {
+        let tokens = match Lexer::lex(code, pool) {
             Ok(tokens) => tokens,
             Err(err) => {
                 return Err(Error {
@@ -68,7 +68,7 @@ impl SyntacticParser {
             }
         };
         let mut parser = Self { tokens, index: 0 };
-        parser.parse_file(filename, module_name, symbol_table)
+        parser.parse_file(filename, module_name, pool)
     }
 }
 
@@ -79,12 +79,12 @@ mod tests {
     use super::*;
 
     fn test_code(code: &str, filename: &str, module_name: &str) -> File {
-        let mut symbol_table = SymbolTable::new();
-        let filename = symbol_table.insert(filename.to_string());
-        let module_name = symbol_table.insert(module_name.to_string());
+        let mut pool = InternPool::new();
+        let filename = pool.insert(filename.to_string());
+        let module_name = pool.insert(module_name.to_string());
         let ast =
-            SyntacticParser::parse_code(code, filename, module_name, &mut symbol_table).unwrap();
-        token::set_symbol_context(symbol_table);
+            SyntacticParser::parse_code(code, filename, module_name, &mut pool).unwrap();
+        token::set_symbol_context(pool);
         ast
     }
 

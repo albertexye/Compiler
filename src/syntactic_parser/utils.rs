@@ -110,7 +110,7 @@ impl SyntacticParser {
 
     pub(super) fn parse_block(
         &mut self,
-        symbol_table: &mut SymbolTable,
+        pool: &mut InternPool,
     ) -> Result<Vec<Statement>, Error> {
         if !self.is_keyword(TokenType::OpenBracket) {
             return Err(self.error(ErrorType::Conditional, "Expected contional body"));
@@ -118,7 +118,7 @@ impl SyntacticParser {
         self.advance();
         let mut statements = Vec::new();
         while !self.is_keyword(TokenType::CloseBracket) {
-            statements.push(self.parse_statement(symbol_table)?);
+            statements.push(self.parse_statement(pool)?);
         }
         self.advance();
         Ok(statements)
