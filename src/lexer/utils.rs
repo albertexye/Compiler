@@ -7,8 +7,8 @@ impl Lexer {
         self.start_column = self.column;
     }
 
-    fn end_token(&self) -> TokenSpan {
-        TokenSpan {
+    fn end_token(&self) -> Span {
+        Span {
             line: self.start_line,
             column: self.start_column,
             index: self.start_index,
@@ -24,10 +24,7 @@ impl Lexer {
         self.input.get(self.index + 1)
     }
 
-    pub(super) fn next_token(
-        &mut self,
-        pool: &mut InternPool,
-    ) -> Result<Option<Token>, Error> {
+    pub(super) fn next_token(&mut self, pool: &mut InternPool) -> Result<Option<Token>, Error> {
         self.skip_whitespace_and_comments();
         self.start_token();
         if self.peek().is_none() {

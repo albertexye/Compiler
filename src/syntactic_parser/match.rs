@@ -2,10 +2,7 @@ use super::*;
 use syntax_ast::{ConditionalBranch, Match};
 
 impl SyntacticParser {
-    pub(super) fn parse_match(
-        &mut self,
-        pool: &mut InternPool,
-    ) -> Result<Statement, Error> {
+    pub(super) fn parse_match(&mut self, pool: &mut InternPool) -> Result<Statement, Error> {
         std::debug_assert!(self.is_keyword(TokenType::Match));
         self.advance();
         self.expect_keyword(
@@ -27,7 +24,7 @@ impl SyntacticParser {
         let mut default = None;
         while !self.is_keyword(TokenType::CloseBracket) {
             if let Some(id) = self.is_identifier()
-                && Some(id) == pool.search("_")
+                && id == intern_pool::get_keyword_symbol_id("_")
             {
                 if default.is_some() {
                     return Err(self.error(ErrorType::Match, "Multiple default branches"));

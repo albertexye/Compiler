@@ -11,8 +11,8 @@ impl Lexer {
         }
         let identifier = identifier.iter().collect();
         let id = pool.insert(identifier);
-        if InternPool::is_keyword(&id) {
-            TokenValue::Keyword(InternPool::get_keyword(&id).unwrap())
+        if intern_pool::is_keyword(&id) {
+            TokenValue::Keyword(intern_pool::get_keyword(&id))
         } else {
             TokenValue::Identifier(id)
         }

@@ -2,22 +2,18 @@ use crate::semantic_ast::{
     Ast, Declaration, Expression, ExpressionValue, File, Function, FunctionArg, Literal, Module,
     Type, TypeDef, TypeDefBody,
 };
+use crate::span::Span;
 use crate::syntax_ast;
-use crate::token::TokenSpan;
 use std::collections::HashMap;
 use std::rc::Rc;
 use syntax_ast::Scope;
 
-mod type_collection;
-
-pub(crate) enum ErrorType {
-    Type,
-}
+pub(crate) enum ErrorType {}
 
 pub(crate) struct Error {
     pub(crate) typ: ErrorType,
     pub(crate) msg: &'static str,
-    pub(crate) span: TokenSpan,
+    pub(crate) span: Span,
 }
 
 fn collect_names(ast: &syntax_ast::Ast) -> Ast {

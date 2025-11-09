@@ -1,4 +1,5 @@
-use crate::token::{SymbolId, TokenSpan};
+use crate::intern_pool::SymbolId;
+use crate::span::Span;
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
 
@@ -45,7 +46,7 @@ pub(crate) struct Scope<T> {
 pub(crate) struct TypeDef {
     pub(crate) name: SymbolId,
     pub(crate) body: TypeDefBody,
-    pub(crate) span: TokenSpan,
+    pub(crate) span: Span,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
@@ -62,8 +63,8 @@ pub(crate) enum Statement {
     Assignment(Assignment),
     Expression(Expression),
     Loop(Loop),
-    Continue(TokenSpan),
-    Break(TokenSpan),
+    Continue(Span),
+    Break(Span),
     Conditional(Conditional),
     Match(Match),
     Return(Expression),
@@ -85,7 +86,7 @@ pub(crate) enum TypeAnnotBase {
 pub(crate) struct TypeAnnot {
     pub(crate) base: TypeAnnotBase,
     pub(crate) modifiers: Vec<TypeModifier>,
-    pub(crate) span: TokenSpan,
+    pub(crate) span: Span,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
@@ -107,14 +108,14 @@ pub(crate) struct Function {
     pub(crate) arguments: Vec<FunctionArg>,
     pub(crate) return_type: Option<TypeAnnot>,
     pub(crate) body: Vec<Statement>,
-    pub(crate) span: TokenSpan,
+    pub(crate) span: Span,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct FunctionArg {
     pub(crate) name: SymbolId,
     pub(crate) typ: TypeAnnot,
-    pub(crate) span: TokenSpan,
+    pub(crate) span: Span,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
@@ -123,13 +124,13 @@ pub(crate) struct Declaration {
     pub(crate) mutable: bool,
     pub(crate) typ: TypeAnnot,
     pub(crate) value: Expression,
-    pub(crate) span: TokenSpan,
+    pub(crate) span: Span,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Expression {
     pub(crate) value: ExpressionValue,
-    pub(crate) span: TokenSpan,
+    pub(crate) span: Span,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
@@ -209,7 +210,7 @@ pub(crate) struct Assignment {
     pub(crate) left: Expression,
     pub(crate) right: Expression,
     pub(crate) typ: AssignmentType,
-    pub(crate) span: TokenSpan,
+    pub(crate) span: Span,
 }
 
 #[derive(Debug, PartialEq, Serialize)]

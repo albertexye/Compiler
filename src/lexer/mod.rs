@@ -1,4 +1,7 @@
-use crate::token::*;
+use crate::intern_pool;
+use crate::intern_pool::{InternPool, SymbolId};
+use crate::span::Span;
+use crate::token::{Literal, Token, TokenType, TokenValue};
 
 mod identifier;
 mod number;
@@ -30,7 +33,7 @@ pub(crate) enum ErrorType {
 #[derive(Debug, PartialEq, Clone)]
 pub(crate) struct Error {
     typ: ErrorType,
-    span: TokenSpan,
+    span: Span,
     msg: &'static str,
 }
 
@@ -56,11 +59,10 @@ impl Lexer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::token::{Literal, Token, TokenSpan, TokenValue};
 
     // Helper to create a TokenSpan
-    fn span(line: usize, column: usize, index: usize, size: usize) -> TokenSpan {
-        TokenSpan {
+    fn span(line: usize, column: usize, index: usize, size: usize) -> Span {
+        Span {
             line,
             column,
             index,

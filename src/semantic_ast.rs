@@ -1,5 +1,6 @@
-use crate::syntax_ast::{Scope, Visibility};
-use crate::token::{SymbolId, TokenSpan};
+use crate::intern_pool::SymbolId;
+use crate::span::Span;
+use crate::syntax_ast::Scope;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -31,7 +32,7 @@ pub(crate) struct File {
 pub(crate) struct TypeDef {
     pub(crate) name: SymbolId,
     pub(crate) body: TypeDefBody,
-    pub(crate) span: TokenSpan,
+    pub(crate) span: Span,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
@@ -91,14 +92,14 @@ pub(crate) struct Function {
     pub(crate) arguments: Vec<Rc<FunctionArg>>,
     pub(crate) return_type: Option<Type>,
     pub(crate) body: Vec<Statement>,
-    pub(crate) span: TokenSpan,
+    pub(crate) span: Span,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct FunctionArg {
     pub(crate) name: SymbolId,
     pub(crate) typ: Type,
-    pub(crate) span: TokenSpan,
+    pub(crate) span: Span,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
@@ -107,14 +108,14 @@ pub(crate) struct Declaration {
     pub(crate) mutable: bool,
     pub(crate) typ: Type,
     pub(crate) value: Expression,
-    pub(crate) span: TokenSpan,
+    pub(crate) span: Span,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Expression {
     pub(crate) value: ExpressionValue,
     pub(crate) typ: Type,
-    pub(crate) span: TokenSpan,
+    pub(crate) span: Span,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
@@ -202,7 +203,7 @@ pub(crate) struct Assignment {
     pub(crate) left: Expression,
     pub(crate) right: Expression,
     pub(crate) typ: AssignmentType,
-    pub(crate) span: TokenSpan,
+    pub(crate) span: Span,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
@@ -254,8 +255,8 @@ pub(crate) enum Statement {
     Assignment(Assignment),
     Expression(Expression),
     Loop(Loop),
-    Continue(TokenSpan),
-    Break(TokenSpan),
+    Continue(Span),
+    Break(Span),
     Conditional(Conditional),
     Match(Match),
     Return(Expression),

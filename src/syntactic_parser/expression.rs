@@ -123,6 +123,12 @@ impl SyntacticParser {
                 match punc {
                     TokenType::OpenParen => self.parse_paren()?,
                     TokenType::OpenBracket => self.parse_array_literal()?,
+                    TokenType::True | TokenType::False => Expression {
+                        value: ExpressionValue::Literal(syntax_ast::Literal::Bool(
+                            punc == TokenType::True,
+                        )),
+                        span: self.back().span - start,
+                    },
                     _ => self.parse_infix_op(punc)?,
                 }
             }
