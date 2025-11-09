@@ -120,21 +120,25 @@ impl SyntacticParser {
         let mut submodules = HashMap::new();
         for path in module_paths {
             let name = Self::path_to_module_name(&path, pool);
+            if files.contains_key(&name) {
+                return Err(Error {
+                    typ: ErrorType::Module,
+                    msg: "Submodule has the same name as a file",
+                    token: None,
+                });
+            }
             let submodule = Self::parse_module(&path, queue, modules, pool)?;
             submodules.insert(name, submodule);
         }
         Ok(Module {
             name: module_name,
             files,
-            modules: submodules,
+            submodules,
             dependencies,
         })
     }
 
-    pub(crate) fn parse_modules(
-        module_path: &Path,
-        pool: &mut InternPool,
-    ) -> Result<Ast, Error> {
+    pub(crate) fn parse_modules(module_path: &Path, pool: &mut InternPool) -> Result<Ast, Error> {
         let entry = module_path.to_path_buf();
         let mut queue = HashSet::new();
         let mut modules = HashMap::new();

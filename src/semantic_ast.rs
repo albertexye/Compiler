@@ -1,43 +1,30 @@
+use crate::syntax_ast::{Scope, Visibility};
 use crate::token::{SymbolId, TokenSpan};
 use serde::Serialize;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::rc::Rc;
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Ast {
     pub(crate) entry: SymbolId,
-    pub(crate) modules: HashMap<SymbolId, Module>,
+    pub(crate) modules: HashMap<SymbolId, Rc<Module>>,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Module {
     pub(crate) name: SymbolId,
     pub(crate) files: HashMap<SymbolId, File>, // filename: file
-    pub(crate) modules: HashMap<SymbolId, Module>,
-    pub(crate) dependencies: HashSet<SymbolId>,
+    pub(crate) submodules: HashMap<SymbolId, Rc<Module>>,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct File {
     pub(crate) name: SymbolId,
     pub(crate) module: SymbolId,
-    pub(crate) imports: HashSet<SymbolId>,
+    pub(crate) imports: HashMap<SymbolId, Rc<Module>>,
     pub(crate) globals: HashMap<SymbolId, Scope<Rc<Declaration>>>,
     pub(crate) functions: HashMap<SymbolId, Scope<Rc<Function>>>,
     pub(crate) types: HashMap<SymbolId, Scope<Rc<TypeDef>>>,
-}
-
-#[derive(Debug, PartialEq, Serialize)]
-pub(crate) enum Visibility {
-    Public,
-    Private,
-    Module,
-}
-
-#[derive(Debug, PartialEq, Serialize)]
-pub(crate) struct Scope<T> {
-    pub(crate) visibility: Visibility,
-    pub(crate) value: T,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
@@ -49,14 +36,14 @@ pub(crate) struct TypeDef {
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) enum TypeDefBody {
-    Struct(HashMap<SymbolId, TypeAnnot>),
+    Struct(HashMap<SymbolId, Type>),
     Enum(HashMap<SymbolId, u64>),
-    Union(HashMap<SymbolId, TypeAnnot>),
-    Alias(TypeAnnot),
+    Union(HashMap<SymbolId, Type>),
+    Alias(Type),
 }
 
 #[derive(Debug, PartialEq, Serialize)]
-pub(crate) enum Primitive {
+pub(crate) enum Type {
     U8,
     U16,
     U32,
@@ -70,66 +57,39 @@ pub(crate) enum Primitive {
     F32,
     F64,
     Bool,
-    Function(FunctionSig),
+
+    Struct(Rc<TypeDef>),
+    Enum(Rc<TypeDef>),
+    Union(Rc<TypeDef>),
+
+    Function(FunctionType),
+
+    Pointer {
+        inner: Box<Type>,
+        mutable: bool,
+    },
+    Slice {
+        inner: Box<Type>,
+        mutable: bool,
+    },
+    Array {
+        inner: Box<Type>,
+        size: u64,
+        mutable: bool,
+    },
 }
 
 #[derive(Debug, PartialEq, Serialize)]
-pub(crate) struct FunctionSig {
-    pub(crate) args: Vec<TypeAnnot>,
-    pub(crate) ret: Option<TypeAnnot>,
-}
-
-#[derive(Debug, PartialEq, Serialize)]
-pub(crate) struct TypeAnnot {
-    pub(crate) base: Rc<Primitive>,
-    pub(crate) modifiers: Vec<TypeModifier>,
-    pub(crate) span: TokenSpan,
-}
-
-#[derive(Debug, PartialEq, Serialize)]
-pub(crate) struct TypeModifier {
-    pub(crate) mutable: bool,
-    pub(crate) typ: TypeModifierType,
-}
-
-#[derive(Debug, PartialEq, Serialize)]
-pub(crate) enum TypeModifierType {
-    Pointer,
-    Slice,
-    Array(u64),
-}
-
-#[derive(Debug, PartialEq, Serialize)]
-pub(crate) struct Enum {
-    pub(crate) name: SymbolId,
-    pub(crate) fields: HashMap<SymbolId, u64>,
-}
-
-#[derive(Debug, PartialEq, Serialize)]
-pub(crate) struct Struct {
-    pub(crate) name: SymbolId,
-    pub(crate) fields: HashMap<SymbolId, TypeAnnot>,
-}
-
-#[derive(Debug, PartialEq, Serialize)]
-pub(crate) struct Union {
-    pub(crate) name: SymbolId,
-    pub(crate) fields: HashMap<SymbolId, TypeAnnot>,
-}
-
-#[derive(Debug, PartialEq, Serialize)]
-pub(crate) enum Type {
-    Primitive(Primitive),
-    Enum(Enum),
-    Struct(Struct),
-    Union(Union),
+pub(crate) struct FunctionType {
+    pub(crate) args: Vec<Type>,
+    pub(crate) ret: Option<Box<Type>>,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Function {
     pub(crate) name: SymbolId,
     pub(crate) arguments: Vec<Rc<FunctionArg>>,
-    pub(crate) return_type: Option<TypeAnnot>,
+    pub(crate) return_type: Option<Type>,
     pub(crate) body: Vec<Statement>,
     pub(crate) span: TokenSpan,
 }
@@ -137,7 +97,7 @@ pub(crate) struct Function {
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct FunctionArg {
     pub(crate) name: SymbolId,
-    pub(crate) typ: TypeAnnot,
+    pub(crate) typ: Type,
     pub(crate) span: TokenSpan,
 }
 
@@ -145,7 +105,7 @@ pub(crate) struct FunctionArg {
 pub(crate) struct Declaration {
     pub(crate) name: SymbolId,
     pub(crate) mutable: bool,
-    pub(crate) typ: TypeAnnot,
+    pub(crate) typ: Type,
     pub(crate) value: Expression,
     pub(crate) span: TokenSpan,
 }
@@ -153,7 +113,7 @@ pub(crate) struct Declaration {
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Expression {
     pub(crate) value: ExpressionValue,
-    pub(crate) typ: TypeAnnot,
+    pub(crate) typ: Type,
     pub(crate) span: TokenSpan,
 }
 
@@ -162,6 +122,7 @@ pub(crate) enum Identifier {
     Declaraction(Rc<Declaration>),
     Function(Rc<Function>),
     Argument(Rc<FunctionArg>),
+    EnumVariant(Rc<TypeDef>, SymbolId),
 }
 
 #[derive(Debug, PartialEq, Serialize)]

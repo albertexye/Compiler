@@ -12,7 +12,7 @@ pub(crate) struct Ast {
 pub(crate) struct Module {
     pub(crate) name: SymbolId,
     pub(crate) files: HashMap<SymbolId, File>, // filename: file
-    pub(crate) modules: HashMap<SymbolId, Module>,
+    pub(crate) submodules: HashMap<SymbolId, Module>,
     pub(crate) dependencies: HashSet<SymbolId>,
 }
 
@@ -28,7 +28,7 @@ pub(crate) struct File {
 
 pub(crate) type Name = Vec<SymbolId>;
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize)]
 pub(crate) enum Visibility {
     Public,
     Private,
