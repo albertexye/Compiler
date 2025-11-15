@@ -1,3 +1,8 @@
+//! The lexer module turns the input file content into tokens.
+//! The token values are interned to improve performance.
+//! Each token also stores where it's from, including the file
+//!     path (interned) and the exact span in the file.
+
 use crate::intern_pool;
 use crate::intern_pool::{InternPool, PathId};
 use crate::span::Span;
@@ -10,35 +15,82 @@ mod skip;
 mod string;
 mod utils;
 
+/// The Lexer object, one for a file.
+/// This struct only holds the state of the Lexer, not the result.
+/// So it can be considered as a intermediate construct.
+/// There's no reason to ever construct Lexer, since Lexer::lex
+///     is what you need.
 pub(crate) struct Lexer {
+    /// Which file we are lexing
     path: PathId,
+    /// The input String gets turned into a Vec of char for easier processing
     input: Vec<char>,
 
+    /// Current index in the original text, counted in characters.
+    /// This index points to the next char to be processed.
     index: usize,
+    /// Current line number, only used to generate Span
     line: usize,
+    /// Current column number, only used to generate Span
     column: usize,
 
+    /// These 3 fields serve the same purpose as the above 3,
+    /// except they are pointing to the beginning to the token
+    /// being processed. This makes it easier to track the span
+    /// of a token.
     start_index: usize,
     start_line: usize,
     start_column: usize,
 }
 
+/// Lexer error types
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub(crate) enum ErrorType {
+    /// A string that's missing a `"`.
     UnclosedString,
+    /// Invalid Unicode escape sequence in a string.
     InvalidEscapeSequence,
+    /// Invalid number due to many possible reasons.
+    /// 1. Invalid base: currently only bases 2, 10, and 16 are supported.
+    ///    So, only 0b, 0x, and normal digits are supported.
+    ///    Base 8 isn't supported due to its uselessness.
+    /// 2. Integer overflow: If a u64 can't hold a positive number,
+    ///    or an i64 can't hold a negative number, an overflow is encountered.
+    ///    There's no plan to support integers larger than 64 bits.
+    /// 3. No digits after base: If `0x` or `0b` are not immediately followed by one
+    ///    or more digits, this error occurs.
+    /// 4. No digits after decimal point: If a decimal point is not immediately
+    ///    followed by one or more digits, this error occurs. Some languages
+    ///    support number literals such as `3.`, but this is generally not
+    ///    obvious that it's a floating point number.
+    /// 5. Invalid digits: If a number contains digits that don't belong to the base,
+    ///    this error occurs. For example, `0b123` is an invalid number.
     InvalidNumber,
+    /// An unrecognized character is encountered. The compiler only accepts ASCII
+    ///     characters unless the characters are in a string or comment.
+    ///     It's generally not good to use Unicode characters to name things,
+    ///     as many characters look similar or the same and there are invisible ones.
     UnknownCharacter,
 }
 
+/// Lexer error struct
 #[derive(Debug, PartialEq, Clone)]
 pub(crate) struct Error {
+    /// The general type of the error.
     typ: ErrorType,
+    /// The place the error occurred.
     span: Span,
+    /// A description to the error. Note how it's mandated that the message must be a
+    ///     static string. Since we already have the error location, there's no need
+    ///     to say what part of the text is wrong. This design choice makes the compiler
+    ///     faster by avoiding dynamic allocations on errors, though it's not a huge gain
+    ///     at all since errors are rare in general.
     msg: &'static str,
 }
 
 impl Lexer {
+    /// Lex the given file content. The InternPool is shared within the whole compilation
+    ///     process, so it's passed to the function.
     pub(crate) fn lex(
         path: PathId,
         input: &str,

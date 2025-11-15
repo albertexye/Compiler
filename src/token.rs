@@ -1,6 +1,8 @@
+/// This file defines Token.
 use crate::intern_pool::SymbolId;
 use crate::span::Span;
 
+/// A list of builtin keywords or punctuators.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub(crate) enum TokenType {
     Comma,
@@ -71,18 +73,26 @@ pub(crate) enum TokenType {
     False,
 }
 
+/// Literal values.
 #[derive(Debug, PartialEq, Clone)]
 pub(crate) enum Literal {
+    /// All non-negative integer literals are treated as UInt.
     UInt(u64),
+    /// Only negative integer literals are treated as Int.
     Int(i64),
     Float(f64),
     String(String),
 }
 
+/// Possible token values.
 #[derive(Debug, PartialEq, Clone)]
 pub(crate) enum TokenValue {
+    /// A name. Any word that's not a keyword.
     Identifier(SymbolId),
+    /// Any literal values except struct literals and array literals,
+    ///     as they are made of other tokens.
     Literal(Literal),
+    /// A keyword or a punctuator. They are treated the same at this stage.
     Keyword(TokenType),
 }
 
@@ -92,6 +102,8 @@ pub(crate) struct Token {
     pub(crate) span: Span,
 }
 
+/// This maps each TokenType with its string representation. It's also used to construct
+///     the InternPool.
 pub(crate) const TOKEN_TYPES_STR: [&str; 66] = [
     ",", ";", ":", "::", ".", "(", ")", "[", "]", "{", "}", "+", "+=", "-", "-=", "*", "*=", "/",
     "/=", "%", "%=", "<<", "<<=", ">>", ">>=", "&", "&=", "|", "|=", "^", "^=", "~", "and", "or",
@@ -100,6 +112,9 @@ pub(crate) const TOKEN_TYPES_STR: [&str; 66] = [
     "mod", "module", "import", "use", "true", "false",
 ];
 
+/// Rust doesn't trust programmers to convert an integer back to an enum.
+/// Therefore, all of the enum values here are listed in the order they
+///     appear in TOKEN_TYPES_STR to perform 2-way conversions.
 pub(crate) const TOKEN_TYPES_ENUM: [TokenType; 66] = [
     TokenType::Comma,
     TokenType::Semicolon,
@@ -169,4 +184,5 @@ pub(crate) const TOKEN_TYPES_ENUM: [TokenType; 66] = [
     TokenType::False,
 ];
 
+/// A sanity check. They should have the same length.
 const _: () = assert!(TOKEN_TYPES_STR.len() == TOKEN_TYPES_ENUM.len());

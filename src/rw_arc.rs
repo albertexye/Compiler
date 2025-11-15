@@ -1,7 +1,11 @@
+/// A wrapper to Arc<RwLock<T>>
 use serde::Serialize;
 use std::ops::Deref;
 use std::sync::{Arc, RwLock};
 
+/// A wrapper to Arc<RwLock<T>>.
+/// This is useful as the sematic ast uses this combination
+///     extensively to make dynamically destructed mutable objects.
 #[derive(Debug, Serialize)]
 pub(crate) struct RwArc<T>(Arc<RwLock<T>>)
 where
