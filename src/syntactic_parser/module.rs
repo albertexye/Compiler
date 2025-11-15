@@ -10,16 +10,21 @@ use syntax_ast::{Ast, Module};
 impl SyntacticParser {
     fn path_to_module_name(path: &Path, pool: &mut InternPool) -> SymbolId {
         let name = path.file_name().unwrap().to_str().unwrap().to_string();
-        pool.insert(name)
+        pool.insert_symbol(name)
     }
 
-    fn read_file(path: PathBuf) -> Result<String, Error> {
+    fn path_to_filename(path: &Path, pool: &mut InternPool) -> SymbolId {
+        let name = path.file_stem().unwrap().to_str().unwrap().to_string();
+        pool.insert_symbol(name)
+    }
+
+    fn read_file(path: &Path, pool: &mut InternPool) -> Result<String, Error> {
         match fs::read_to_string(path) {
             Ok(content) => Ok(content),
             Err(err) => Err(Error {
                 typ: ErrorType::Io(Box::new(err)),
                 msg: "Failed to open module file",
-                token: None,
+                span: Span::path_only(pool.insert_path(path.to_path_buf())),
             }),
         }
     }
@@ -31,14 +36,14 @@ impl SyntacticParser {
         pool: &mut InternPool,
     ) -> Result<HashSet<SymbolId>, Error> {
         let module_file = module_path.join("module.json");
-        let content = Self::read_file(module_file)?;
+        let content = Self::read_file(&module_file, pool)?;
         let dependencies: Vec<String> = match serde_json::from_str(&content) {
             Ok(dependencies) => dependencies,
             Err(err) => {
                 return Err(Error {
                     typ: ErrorType::ModuleFile(Box::new(err)),
                     msg: "Invalid module file",
-                    token: None,
+                    span: Span::path_only(pool.insert_path(module_file)),
                 });
             }
         };
@@ -55,7 +60,7 @@ impl SyntacticParser {
         Ok(ret)
     }
 
-    fn read_dir(dir: &Path) -> Result<(Vec<PathBuf>, Vec<PathBuf>), Error> {
+    fn read_dir(dir: &Path, pool: &mut InternPool) -> Result<(Vec<PathBuf>, Vec<PathBuf>), Error> {
         let mut files = Vec::new();
         let mut dirs = Vec::new();
         let entries = match fs::read_dir(dir) {
@@ -64,7 +69,7 @@ impl SyntacticParser {
                 return Err(Error {
                     typ: ErrorType::Io(Box::new(err)),
                     msg: "Failed to read dir",
-                    token: None,
+                    span: Span::path_only(pool.insert_path(dir.to_path_buf())),
                 });
             }
         };
@@ -100,7 +105,7 @@ impl SyntacticParser {
     ) -> Result<Module, Error> {
         let dependencies = Self::parse_module_file(module_path, queue, modules, pool)?;
         let mut files = HashMap::new();
-        let (file_paths, module_paths) = SyntacticParser::read_dir(module_path)?;
+        let (file_paths, module_paths) = Self::read_dir(module_path, pool)?;
         let module_name = Self::path_to_module_name(module_path, pool);
         for path in file_paths {
             let code = match fs::read_to_string(&path) {
@@ -109,12 +114,13 @@ impl SyntacticParser {
                     return Err(Error {
                         typ: ErrorType::Io(Box::new(err)),
                         msg: "Failed to read file",
-                        token: None,
+                        span: Span::path_only(pool.insert_path(path)),
                     });
                 }
             };
             let filename = Self::path_to_module_name(&path, pool);
-            let file = Self::parse_code(&code, filename, module_name, pool)?;
+            let path_id = pool.insert_path(path);
+            let file = Self::parse_code(path_id, &code, filename, module_name, pool)?;
             files.insert(filename, file);
         }
         let mut submodules = HashMap::new();
@@ -124,13 +130,14 @@ impl SyntacticParser {
                 return Err(Error {
                     typ: ErrorType::Module,
                     msg: "Submodule has the same name as a file",
-                    token: None,
+                    span: Span::path_only(pool.insert_path(path)),
                 });
             }
             let submodule = Self::parse_module(&path, queue, modules, pool)?;
             submodules.insert(name, submodule);
         }
         Ok(Module {
+            path: pool.insert_path(module_path.to_path_buf()),
             name: module_name,
             files,
             submodules,
@@ -151,7 +158,7 @@ impl SyntacticParser {
                 return Err(Error {
                     typ: ErrorType::Module,
                     msg: "Importing non-top-level module",
-                    token: None,
+                    span: Span::path_only(pool.insert_path(path)),
                 });
             }
             let module = Self::parse_module(&path, &mut queue, &modules, pool)?;

@@ -10,11 +10,11 @@ impl SyntacticParser {
     }
 
     pub(super) fn error(&self, typ: ErrorType, msg: &'static str) -> Error {
-        Error {
-            typ,
-            msg,
-            token: self.peek(),
-        }
+        let span = match self.peek() {
+            Some(token) => token.span,
+            None => Span::path_only(self.path),
+        };
+        Error { typ, msg, span }
     }
 
     pub(super) fn expect_token(
@@ -108,10 +108,7 @@ impl SyntacticParser {
         }
     }
 
-    pub(super) fn parse_block(
-        &mut self,
-        pool: &mut InternPool,
-    ) -> Result<Vec<Statement>, Error> {
+    pub(super) fn parse_block(&mut self, pool: &mut InternPool) -> Result<Vec<Statement>, Error> {
         if !self.is_keyword(TokenType::OpenBracket) {
             return Err(self.error(ErrorType::Conditional, "Expected contional body"));
         }

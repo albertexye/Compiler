@@ -1,7 +1,7 @@
 use crate::intern_pool;
-use crate::intern_pool::{InternPool, SymbolId};
+use crate::intern_pool::{InternPool, PathId};
 use crate::span::Span;
-use crate::token::{Literal, Token, TokenType, TokenValue};
+use crate::token::{Literal, Token, TokenValue};
 
 mod identifier;
 mod number;
@@ -11,6 +11,7 @@ mod string;
 mod utils;
 
 pub(crate) struct Lexer {
+    path: PathId,
     input: Vec<char>,
 
     index: usize,
@@ -38,8 +39,13 @@ pub(crate) struct Error {
 }
 
 impl Lexer {
-    pub(crate) fn lex(input: &str, pool: &mut InternPool) -> Result<Vec<Token>, Error> {
+    pub(crate) fn lex(
+        path: PathId,
+        input: &str,
+        pool: &mut InternPool,
+    ) -> Result<Vec<Token>, Error> {
         let mut lexer = Self {
+            path,
             input: input.chars().collect(),
             index: 0,
             line: 1,
@@ -59,10 +65,13 @@ impl Lexer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::intern_pool::TEST_PATH_ID;
+    use crate::token::TokenType;
+    use std::path::PathBuf;
 
-    // Helper to create a TokenSpan
     fn span(line: usize, column: usize, index: usize, size: usize) -> Span {
         Span {
+            path: TEST_PATH_ID,
             line,
             column,
             index,
@@ -70,10 +79,10 @@ mod tests {
         }
     }
 
-    // Helper function to compare lexed tokens with expected tokens, including spans.
     fn assert_lexes(input: &str, expected: Vec<Token>) {
         let mut pool = InternPool::new();
-        let tokens = Lexer::lex(input, &mut pool).unwrap();
+        let path_id = pool.insert_path(PathBuf::new());
+        let tokens = Lexer::lex(path_id, input, &mut pool).unwrap();
         assert_eq!(tokens, expected);
     }
 
@@ -156,8 +165,9 @@ mod tests {
     #[test]
     fn test_number_errors() {
         let mut pool = InternPool::new();
-        assert!(Lexer::lex("0xG", &mut pool).is_err());
-        assert!(Lexer::lex("0b2", &mut pool).is_err());
+        let path_id = pool.insert_path(PathBuf::new());
+        assert!(Lexer::lex(path_id, "0xG", &mut pool).is_err());
+        assert!(Lexer::lex(path_id, "0b2", &mut pool).is_err());
     }
 
     #[test]
@@ -181,20 +191,22 @@ mod tests {
     #[test]
     fn test_unclosed_string() {
         let mut pool = InternPool::new();
-        assert!(Lexer::lex(r#""hello"#, &mut pool).is_err());
+        let path_id = pool.insert_path(PathBuf::new());
+        assert!(Lexer::lex(path_id, r#""hello"#, &mut pool).is_err());
     }
 
     #[test]
     fn test_identifiers_and_keywords() {
         let mut pool = InternPool::new();
-        let tokens = Lexer::lex("let x = 5;", &mut pool).unwrap();
+        let path_id = pool.insert_path(PathBuf::new());
+        let tokens = Lexer::lex(path_id, "let x = 5;", &mut pool).unwrap();
         let expected = vec![
             Token {
                 value: TokenValue::Keyword(TokenType::Let),
                 span: span(1, 1, 0, 3),
             },
             Token {
-                value: TokenValue::Identifier(pool.search("x").unwrap()),
+                value: TokenValue::Identifier(pool.search_symbol("x").unwrap()),
                 span: span(1, 5, 4, 1),
             },
             Token {
@@ -241,14 +253,15 @@ mod tests {
     #[test]
     fn test_multiline_lexing() {
         let mut pool = InternPool::new();
-        let tokens = Lexer::lex("let y\n  = 10;", &mut pool).unwrap();
+        let path_id = pool.insert_path(PathBuf::new());
+        let tokens = Lexer::lex(path_id, "let y\n  = 10;", &mut pool).unwrap();
         let expected = vec![
             Token {
                 value: TokenValue::Keyword(TokenType::Let),
                 span: span(1, 1, 0, 3),
             },
             Token {
-                value: TokenValue::Identifier(pool.search("y").unwrap()),
+                value: TokenValue::Identifier(pool.search_symbol("y").unwrap()),
                 span: span(1, 5, 4, 1),
             },
             Token {

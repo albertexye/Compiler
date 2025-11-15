@@ -1,4 +1,4 @@
-use crate::intern_pool::SymbolId;
+use crate::intern_pool::{PathId, SymbolId};
 use crate::span::Span;
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
@@ -12,16 +12,17 @@ pub(crate) struct Ast {
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Module {
     pub(crate) name: SymbolId,
-    pub(crate) files: HashMap<SymbolId, File>, // filename: file
+    pub(crate) files: HashMap<SymbolId, File>,
     pub(crate) submodules: HashMap<SymbolId, Module>,
     pub(crate) dependencies: HashSet<SymbolId>,
+    pub(crate) path: PathId,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct File {
     pub(crate) name: SymbolId,
     pub(crate) module: SymbolId,
-    pub(crate) imports: HashSet<SymbolId>,
+    pub(crate) imports: HashMap<SymbolId, Span>,
     pub(crate) globals: HashMap<SymbolId, Scope<Declaration>>,
     pub(crate) functions: HashMap<SymbolId, Scope<Function>>,
     pub(crate) types: HashMap<SymbolId, Scope<TypeDef>>,

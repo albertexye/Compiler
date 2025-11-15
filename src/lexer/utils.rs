@@ -9,6 +9,7 @@ impl Lexer {
 
     fn end_token(&self) -> Span {
         Span {
+            path: self.path,
             line: self.start_line,
             column: self.start_column,
             index: self.start_index,

@@ -8,7 +8,9 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use syntax_ast::Scope;
 
-pub(crate) enum ErrorType {}
+pub(crate) enum ErrorType {
+    Import,
+}
 
 pub(crate) struct Error {
     pub(crate) typ: ErrorType,
@@ -137,4 +139,35 @@ fn collect_file_names(file: &syntax_ast::File) -> File {
         functions,
         types,
     }
+}
+
+fn resolve_module_imports(
+    syn_module: &syntax_ast::Module,
+    sem_module: &Rc<Module>,
+    sem_ast: &mut Ast,
+) -> Result<(), Error> {
+    for dep in syn_module.dependencies.iter() {
+        if !sem_ast.modules.contains_key(dep) {
+            return Err(Error {
+                typ: ErrorType::Import,
+                msg: "Dependency doesn't exist",
+                span: Span::path_only(syn_module.path),
+            });
+        }
+    }
+    for (file_name, syn_file) in syn_module.files.iter() {
+        let sem_file = sem_module.files.get_mut(file_name).unwrap();
+        for (import, span) in syn_file.imports.iter() {
+            if !syn_module.dependencies.contains(import) {
+                return Err(Error {
+                    typ: ErrorType::Import,
+                    msg: "Importing undeclared module",
+                    span: *span,
+                });
+            }
+            let imported = sem_ast.modules.get(import).unwrap();
+            sem_file.imports.insert(*import, imported.clone());
+        }
+    }
+    Ok(())
 }

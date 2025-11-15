@@ -10,7 +10,7 @@ impl Lexer {
             self.advance();
         }
         let identifier = identifier.iter().collect();
-        let id = pool.insert(identifier);
+        let id = pool.insert_symbol(identifier);
         if intern_pool::is_keyword(&id) {
             TokenValue::Keyword(intern_pool::get_keyword(&id))
         } else {

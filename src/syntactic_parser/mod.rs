@@ -1,6 +1,7 @@
-use crate::intern_pool;
+use crate::intern_pool::{self, PathId};
 use crate::intern_pool::{InternPool, SymbolId};
 use crate::lexer::Lexer;
+use crate::span::Span;
 use crate::syntax_ast;
 use crate::syntax_ast::{Name, Statement};
 use crate::token;
@@ -44,47 +45,57 @@ pub(crate) enum ErrorType {
 pub(crate) struct Error {
     typ: ErrorType,
     msg: &'static str,
-    token: Option<Token>,
+    span: Span,
 }
 
 pub struct SyntacticParser {
+    path: PathId,
     tokens: Vec<Token>,
     index: usize,
 }
 
 impl SyntacticParser {
     pub(crate) fn parse_code(
+        path: PathId,
         code: &str,
         filename: SymbolId,
         module_name: SymbolId,
         pool: &mut InternPool,
     ) -> Result<syntax_ast::File, Error> {
-        let tokens = match Lexer::lex(code, pool) {
+        let tokens = match Lexer::lex(path, code, pool) {
             Ok(tokens) => tokens,
             Err(err) => {
                 return Err(Error {
                     typ: ErrorType::Lexer(Box::new(err)),
                     msg: "Lexer error",
-                    token: None,
+                    span: Span::path_only(path),
                 });
             }
         };
-        let mut parser = Self { tokens, index: 0 };
+        let mut parser = Self {
+            path,
+            tokens,
+            index: 0,
+        };
         parser.parse_file(filename, module_name, pool)
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
+
     use crate::syntax_ast::File;
 
     use super::*;
 
     fn test_code(code: &str, filename: &str, module_name: &str) -> File {
         let mut pool = InternPool::new();
-        let filename = pool.insert(filename.to_string());
-        let module_name = pool.insert(module_name.to_string());
-        let ast = SyntacticParser::parse_code(code, filename, module_name, &mut pool).unwrap();
+        let filename = pool.insert_symbol(filename.to_string());
+        let module_name = pool.insert_symbol(module_name.to_string());
+        let path = pool.insert_path(PathBuf::new());
+        let ast =
+            SyntacticParser::parse_code(path, code, filename, module_name, &mut pool).unwrap();
         intern_pool::set_symbol_context(pool);
         ast
     }

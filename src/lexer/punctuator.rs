@@ -11,7 +11,7 @@ impl Lexer {
         {
             punc.push(*ch);
             let s: String = punc.iter().collect();
-            if let Some(id) = pool.search(&s) {
+            if let Some(id) = pool.search_symbol(&s) {
                 if intern_pool::is_keyword(&id) {
                     keyword = Some(intern_pool::get_keyword(&id));
                     kw_i = i;

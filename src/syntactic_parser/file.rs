@@ -1,5 +1,5 @@
 use super::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use syntax_ast::{Declaration, File, Function, Scope, TypeDef, Visibility};
 
 impl SyntacticParser {
@@ -7,7 +7,7 @@ impl SyntacticParser {
         &mut self,
         filename: SymbolId,
         module_name: SymbolId,
-        pool: &mut InternPool,
+        pool: &mut InternPool,
     ) -> Result<File, Error> {
         let module = self.parse_module_declaration()?;
         if module != module_name {
@@ -18,7 +18,7 @@ impl SyntacticParser {
         let mut globals = HashMap::new();
         let mut functions = HashMap::new();
         while self.peek().is_some() {
-            self.parse_content(&mut types, &mut globals, &mut functions, pool)?;
+            self.parse_content(&mut types, &mut globals, &mut functions, pool)?;
         }
         Ok(File {
             name: filename,
@@ -35,7 +35,7 @@ impl SyntacticParser {
         types: &mut HashMap<SymbolId, Scope<TypeDef>>,
         globals: &mut HashMap<SymbolId, Scope<Declaration>>,
         functions: &mut HashMap<SymbolId, Scope<Function>>,
-        pool: &mut InternPool,
+        pool: &mut InternPool,
     ) -> Result<(), Error> {
         let visibility = self.parse_visibility()?;
         let token = self.expect_token(ErrorType::Module, "Missing symbol definition")?;
@@ -62,7 +62,7 @@ impl SyntacticParser {
                 }
             }
             TokenType::Fn => {
-                let value = self.parse_function(pool)?;
+                let value = self.parse_function(pool)?;
                 if functions
                     .insert(value.name, Scope { visibility, value })
                     .is_some()
@@ -109,25 +109,28 @@ impl SyntacticParser {
         Ok(name)
     }
 
-    fn parse_imports(&mut self) -> Result<HashSet<SymbolId>, Error> {
-        let mut imports = HashSet::new();
+    fn parse_imports(&mut self) -> Result<HashMap<SymbolId, Span>, Error> {
+        let mut imports = HashMap::new();
         while self.is_keyword(TokenType::Import) {
-            if !imports.insert(self.parse_import()?) {
+            let (name, span) = self.parse_import()?;
+            if !imports.contains_key(&name) {
                 return Err(self.error(ErrorType::Import, "Duplicated imports"));
             }
+            imports.insert(name, span);
         }
         Ok(imports)
     }
 
-    fn parse_import(&mut self) -> Result<SymbolId, Error> {
+    fn parse_import(&mut self) -> Result<(SymbolId, Span), Error> {
         std::debug_assert!(self.is_keyword(TokenType::Import));
         self.advance();
         let name = self.is_identifier().ok_or(self.error(
             ErrorType::Import,
             "Keyword `import` must be followed by a valid identifier",
         ))?;
+        let span = self.peek().unwrap().span;
         self.advance();
         self.end_line()?;
-        Ok(name)
+        Ok((name, span))
     }
 }
