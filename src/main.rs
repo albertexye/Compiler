@@ -1,5 +1,6 @@
 mod intern_pool;
 mod lexer;
+mod rw_arc;
 mod semantic_ast;
 mod semantic_parser;
 mod span;

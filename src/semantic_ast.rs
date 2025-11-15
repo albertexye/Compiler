@@ -1,31 +1,31 @@
 use crate::intern_pool::SymbolId;
+use crate::rw_arc::RwArc;
 use crate::span::Span;
 use crate::syntax_ast::Scope;
 use serde::Serialize;
 use std::collections::HashMap;
-use std::rc::Rc;
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Ast {
     pub(crate) entry: SymbolId,
-    pub(crate) modules: HashMap<SymbolId, Rc<Module>>,
+    pub(crate) modules: HashMap<SymbolId, RwArc<Module>>,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Module {
     pub(crate) name: SymbolId,
     pub(crate) files: HashMap<SymbolId, File>, // filename: file
-    pub(crate) submodules: HashMap<SymbolId, Rc<Module>>,
+    pub(crate) submodules: HashMap<SymbolId, RwArc<Module>>,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct File {
     pub(crate) name: SymbolId,
     pub(crate) module: SymbolId,
-    pub(crate) imports: HashMap<SymbolId, Rc<Module>>,
-    pub(crate) globals: HashMap<SymbolId, Scope<Rc<Declaration>>>,
-    pub(crate) functions: HashMap<SymbolId, Scope<Rc<Function>>>,
-    pub(crate) types: HashMap<SymbolId, Scope<Rc<TypeDef>>>,
+    pub(crate) imports: HashMap<SymbolId, RwArc<Module>>,
+    pub(crate) globals: HashMap<SymbolId, Scope<RwArc<Declaration>>>,
+    pub(crate) functions: HashMap<SymbolId, Scope<RwArc<Function>>>,
+    pub(crate) types: HashMap<SymbolId, Scope<RwArc<TypeDef>>>,
 }
 
 #[derive(Debug, PartialEq, Serialize)]
@@ -59,9 +59,9 @@ pub(crate) enum Type {
     F64,
     Bool,
 
-    Struct(Rc<TypeDef>),
-    Enum(Rc<TypeDef>),
-    Union(Rc<TypeDef>),
+    Struct(RwArc<TypeDef>),
+    Enum(RwArc<TypeDef>),
+    Union(RwArc<TypeDef>),
 
     Function(FunctionType),
 
@@ -89,7 +89,7 @@ pub(crate) struct FunctionType {
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Function {
     pub(crate) name: SymbolId,
-    pub(crate) arguments: Vec<Rc<FunctionArg>>,
+    pub(crate) arguments: Vec<RwArc<FunctionArg>>,
     pub(crate) return_type: Option<Type>,
     pub(crate) body: Vec<Statement>,
     pub(crate) span: Span,
@@ -120,10 +120,10 @@ pub(crate) struct Expression {
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) enum Identifier {
-    Declaraction(Rc<Declaration>),
-    Function(Rc<Function>),
-    Argument(Rc<FunctionArg>),
-    EnumVariant(Rc<TypeDef>, SymbolId),
+    Declaraction(RwArc<Declaration>),
+    Function(RwArc<Function>),
+    Argument(RwArc<FunctionArg>),
+    EnumVariant(RwArc<TypeDef>, SymbolId),
 }
 
 #[derive(Debug, PartialEq, Serialize)]
@@ -243,7 +243,7 @@ pub(crate) struct Match {
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct Loop {
-    pub(crate) init: Option<Rc<Declaration>>,
+    pub(crate) init: Option<RwArc<Declaration>>,
     pub(crate) condition: Option<Expression>,
     pub(crate) update: Vec<Statement>,
     pub(crate) body: Vec<Statement>,
@@ -251,7 +251,7 @@ pub(crate) struct Loop {
 
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) enum Statement {
-    Declaration(Rc<Declaration>),
+    Declaration(RwArc<Declaration>),
     Assignment(Assignment),
     Expression(Expression),
     Loop(Loop),

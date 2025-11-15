@@ -1,3 +1,4 @@
+use crate::rw_arc::RwArc;
 use crate::semantic_ast::{
     Ast, Declaration, Expression, ExpressionValue, File, Function, FunctionArg, Literal, Module,
     Type, TypeDef, TypeDefBody,
@@ -5,7 +6,6 @@ use crate::semantic_ast::{
 use crate::span::Span;
 use crate::syntax_ast;
 use std::collections::HashMap;
-use std::rc::Rc;
 use syntax_ast::Scope;
 
 pub(crate) enum ErrorType {
@@ -29,7 +29,7 @@ fn collect_names(ast: &syntax_ast::Ast) -> Ast {
     }
 }
 
-fn collect_module_names(module: &syntax_ast::Module) -> Rc<Module> {
+fn collect_module_names(module: &syntax_ast::Module) -> RwArc<Module> {
     let mut submodules = HashMap::new();
     for (submodule_name, submodule) in module.submodules.iter() {
         submodules.insert(*submodule_name, collect_module_names(submodule));
@@ -38,17 +38,17 @@ fn collect_module_names(module: &syntax_ast::Module) -> Rc<Module> {
     for (file_name, file) in module.files.iter() {
         files.insert(*file_name, collect_file_names(file));
     }
-    Rc::new(Module {
+    RwArc::new(Module {
         name: module.name,
         files,
         submodules,
     })
 }
 
-fn build_global_skeleton(global: &Scope<syntax_ast::Declaration>) -> Scope<Rc<Declaration>> {
+fn build_global_skeleton(global: &Scope<syntax_ast::Declaration>) -> Scope<RwArc<Declaration>> {
     Scope {
         visibility: global.visibility,
-        value: Rc::new(Declaration {
+        value: RwArc::new(Declaration {
             name: global.value.name,
             mutable: global.value.mutable,
             typ: Type::U8,
@@ -62,10 +62,10 @@ fn build_global_skeleton(global: &Scope<syntax_ast::Declaration>) -> Scope<Rc<De
     }
 }
 
-fn build_function_skeleton(function: &Scope<syntax_ast::Function>) -> Scope<Rc<Function>> {
+fn build_function_skeleton(function: &Scope<syntax_ast::Function>) -> Scope<RwArc<Function>> {
     let mut arguments = Vec::new();
     for argument in function.value.arguments.iter() {
-        arguments.push(Rc::new(FunctionArg {
+        arguments.push(RwArc::new(FunctionArg {
             name: argument.name,
             typ: Type::U8,
             span: argument.span,
@@ -73,7 +73,7 @@ fn build_function_skeleton(function: &Scope<syntax_ast::Function>) -> Scope<Rc<F
     }
     Scope {
         visibility: function.visibility,
-        value: Rc::new(Function {
+        value: RwArc::new(Function {
             name: function.value.name,
             arguments,
             return_type: None,
@@ -83,7 +83,7 @@ fn build_function_skeleton(function: &Scope<syntax_ast::Function>) -> Scope<Rc<F
     }
 }
 
-fn build_type_skeleton(typ: &Scope<syntax_ast::TypeDef>) -> Scope<Rc<TypeDef>> {
+fn build_type_skeleton(typ: &Scope<syntax_ast::TypeDef>) -> Scope<RwArc<TypeDef>> {
     let body = match &typ.value.body {
         syntax_ast::TypeDefBody::Struct(struct_) => {
             let mut fields = HashMap::new();
@@ -110,7 +110,7 @@ fn build_type_skeleton(typ: &Scope<syntax_ast::TypeDef>) -> Scope<Rc<TypeDef>> {
     };
     Scope {
         visibility: typ.visibility,
-        value: Rc::new(TypeDef {
+        value: RwArc::new(TypeDef {
             name: typ.value.name,
             body,
             span: typ.value.span,
@@ -143,7 +143,7 @@ fn collect_file_names(file: &syntax_ast::File) -> File {
 
 fn resolve_module_imports(
     syn_module: &syntax_ast::Module,
-    sem_module: &Rc<Module>,
+    sem_module: &RwArc<Module>,
     sem_ast: &mut Ast,
 ) -> Result<(), Error> {
     for dep in syn_module.dependencies.iter() {
@@ -156,7 +156,8 @@ fn resolve_module_imports(
         }
     }
     for (file_name, syn_file) in syn_module.files.iter() {
-        let sem_file = sem_module.files.get_mut(file_name).unwrap();
+        let mut guard = (**sem_module).write().unwrap();
+        let sem_file = guard.files.get_mut(file_name).unwrap();
         for (import, span) in syn_file.imports.iter() {
             if !syn_module.dependencies.contains(import) {
                 return Err(Error {
@@ -166,7 +167,7 @@ fn resolve_module_imports(
                 });
             }
             let imported = sem_ast.modules.get(import).unwrap();
-            sem_file.imports.insert(*import, imported.clone());
+            sem_file.imports.insert(*import, (imported).clone());
         }
     }
     Ok(())
