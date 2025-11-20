@@ -28,10 +28,15 @@ pub(crate) struct File {
     pub(crate) types: HashMap<SymbolId, Scope<RwArc<TypeDef>>>,
 }
 
+#[derive(Debug, PartialEq, Serialize, Clone, Copy)]
+pub(crate) struct TypeId(pub(crate) usize);
+
 #[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct TypeDef {
+    pub(crate) id: TypeId,
     pub(crate) name: SymbolId,
     pub(crate) body: TypeDefBody,
+    pub(crate) size: usize,
     pub(crate) span: Span,
 }
 
@@ -59,9 +64,7 @@ pub(crate) enum Type {
     F64,
     Bool,
 
-    Struct(RwArc<TypeDef>),
-    Enum(RwArc<TypeDef>),
-    Union(RwArc<TypeDef>),
+    Custom(RwArc<TypeDef>),
 
     Function(FunctionType),
 

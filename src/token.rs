@@ -5,6 +5,7 @@ use crate::span::Span;
 /// A list of builtin keywords or punctuators.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub(crate) enum TokenType {
+    // Punctuators
     Comma,
     Semicolon,
     Colon,
@@ -49,6 +50,8 @@ pub(crate) enum TokenType {
     Assign,
     ReturnType,
     MatchCase,
+
+    // Keywords
     If,
     Else,
     Match,
@@ -69,8 +72,25 @@ pub(crate) enum TokenType {
     Module,
     Import,
     Use,
+
+    // Literals
     True,
     False,
+
+    // Primitives
+    U8,
+    U16,
+    U32,
+    U64,
+    I8,
+    Usize,
+    I16,
+    I32,
+    I64,
+    Isize,
+    F32,
+    F64,
+    Bool,
 }
 
 /// Literal values.
@@ -104,18 +124,23 @@ pub(crate) struct Token {
 
 /// This maps each TokenType with its string representation. It's also used to construct
 ///     the InternPool.
-pub(crate) const TOKEN_TYPES_STR: [&str; 66] = [
+pub(crate) const TOKEN_TYPES_STR: [&str; 79] = [
+    // Punctuators
     ",", ";", ":", "::", ".", "(", ")", "[", "]", "{", "}", "+", "+=", "-", "-=", "*", "*=", "/",
     "/=", "%", "%=", "<<", "<<=", ">>", ">>=", "&", "&=", "|", "|=", "^", "^=", "~", "and", "or",
-    "!", "==", "!=", ">", ">=", "<", "<=", "=", "->", "=>", "if", "else", "match", "while", "for",
-    "break", "continue", "return", "fn", "let", "var", "struct", "enum", "union", "pub", "prv",
-    "mod", "module", "import", "use", "true", "false",
+    "!", "==", "!=", ">", ">=", "<", "<=", "=", "->", "=>", // Keywords
+    "if", "else", "match", "while", "for", "break", "continue", "return", "fn", "let", "var",
+    "struct", "enum", "union", "pub", "prv", "mod", "module", "import", "use",
+    // Literals
+    "true", "false", // Primitives
+    "u8", "u16", "u32", "u64", "usize", "i8", "i16", "i32", "i64", "isize", "f32", "f64", "bool",
 ];
 
 /// Rust doesn't trust programmers to convert an integer back to an enum.
 /// Therefore, all of the enum values here are listed in the order they
 ///     appear in TOKEN_TYPES_STR to perform 2-way conversions.
-pub(crate) const TOKEN_TYPES_ENUM: [TokenType; 66] = [
+pub(crate) const TOKEN_TYPES_ENUM: [TokenType; 79] = [
+    // Punctuators
     TokenType::Comma,
     TokenType::Semicolon,
     TokenType::Colon,
@@ -160,6 +185,7 @@ pub(crate) const TOKEN_TYPES_ENUM: [TokenType; 66] = [
     TokenType::Assign,
     TokenType::ReturnType,
     TokenType::MatchCase,
+    // Keywords
     TokenType::If,
     TokenType::Else,
     TokenType::Match,
@@ -180,9 +206,24 @@ pub(crate) const TOKEN_TYPES_ENUM: [TokenType; 66] = [
     TokenType::Module,
     TokenType::Import,
     TokenType::Use,
+    // Literals
     TokenType::True,
     TokenType::False,
+    // Primitives
+    TokenType::U8,
+    TokenType::U16,
+    TokenType::U32,
+    TokenType::U64,
+    TokenType::Usize,
+    TokenType::I8,
+    TokenType::I16,
+    TokenType::I32,
+    TokenType::I64,
+    TokenType::Isize,
+    TokenType::F32,
+    TokenType::F64,
+    TokenType::Bool,
 ];
 
-/// A sanity check. They should have the same length.
+/// A sanity check. They must have the same length.
 const _: () = assert!(TOKEN_TYPES_STR.len() == TOKEN_TYPES_ENUM.len());
